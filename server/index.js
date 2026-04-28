@@ -1,8 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import Database from 'better-sqlite3';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -13,109 +16,121 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// MongoDB Connection
+const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/school_discipline';
+mongoose.connect(mongoURI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Schemas
+const studentSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  grade: { type: String, required: true },
+  class_name: { type: String, required: true },
+  phone: String,
+  student_number: { type: String, unique: true, required: true }
+});
+
+const reportSchema = new mongoose.Schema({
+  student_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
+  teacher_name: { type: String, required: true },
+  subject: { type: String, required: true },
+  violation_type: { type: String, required: true },
+  notes: String,
+  created_at: { type: Date, default: Date.now }
+});
+
+const Student = mongoose.model('Student', studentSchema);
+const Report = mongoose.model('Report', reportSchema);
+
 // Logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  if (req.method === 'POST') console.log('Body:', req.body);
   next();
 });
 
-const db = new Database('school.db');
-
-// Initialize database
-db.exec(`
-  CREATE TABLE IF NOT EXISTS students (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    grade TEXT NOT NULL,
-    class_name TEXT NOT NULL,
-    phone TEXT,
-    student_number TEXT UNIQUE
-  );
-
-  CREATE TABLE IF NOT EXISTS reports (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_id INTEGER,
-    teacher_name TEXT,
-    subject TEXT,
-    violation_type TEXT,
-    notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(id)
-  );
-`);
-
-// Add sample student if none exists
-const studentCount = db.prepare('SELECT COUNT(*) as count FROM students').get().count;
-if (studentCount === 0) {
-  db.prepare('INSERT INTO students (name, grade, class_name, phone, student_number) VALUES (?, ?, ?, ?, ?)')
-    .run('أحمد محمد', 'الأول الثانوي', '1/1', '0501234567', '1001');
-  db.prepare('INSERT INTO students (name, grade, class_name, phone, student_number) VALUES (?, ?, ?, ?, ?)')
-    .run('خالد عبدالله', 'الأول الثانوي', '1/1', '0507654321', '1002');
-  db.prepare('INSERT INTO students (name, grade, class_name, phone, student_number) VALUES (?, ?, ?, ?, ?)')
-    .run('ياسر فهد', 'الثاني الثانوي', '2/1', '0500000000', '1003');
-}
-
 // Students API
-app.get('/api/students', (req, res) => {
-  const students = db.prepare('SELECT * FROM students').all();
-  res.json(students);
+app.get('/api/students', async (req, res) => {
+  try {
+    const students = await Student.find();
+    res.json(students);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/students', (req, res) => {
-  const { name, grade, class_name, phone, student_number } = req.body;
-  const info = db.prepare('INSERT INTO students (name, grade, class_name, phone, student_number) VALUES (?, ?, ?, ?, ?)')
-    .run(name, grade, class_name, phone, student_number);
-  res.json({ id: info.lastInsertRowid });
+app.post('/api/students', async (req, res) => {
+  try {
+    const student = new Student(req.body);
+    await student.save();
+    res.json(student);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-app.post('/api/students/bulk', (req, res) => {
-  const students = req.body;
-  const insert = db.prepare('INSERT OR IGNORE INTO students (name, grade, class_name, phone, student_number) VALUES (?, ?, ?, ?, ?)');
-  
-  const insertMany = db.transaction((list) => {
-    for (const s of list) insert.run(s.name, s.grade, s.class_name, s.phone, s.student_number);
-  });
-
-  insertMany(students);
-  res.json({ success: true, count: students.length });
+app.post('/api/students/bulk', async (req, res) => {
+  try {
+    const students = req.body;
+    const result = await Student.insertMany(students, { ordered: false }).catch(err => err.insertedDocs);
+    res.json({ success: true, count: students.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Reports API
-app.get('/api/reports', (req, res) => {
-  const reports = db.prepare(`
-    SELECT reports.*, students.name as student_name, students.grade, students.class_name 
-    FROM reports 
-    JOIN students ON reports.student_id = students.id
-    ORDER BY created_at DESC
-  `).all();
-  res.json(reports);
+app.get('/api/reports', async (req, res) => {
+  try {
+    const reports = await Report.find().populate('student_id').sort({ created_at: -1 });
+    const formattedReports = reports.map(r => ({
+      ...r._doc,
+      student_name: r.student_id?.name,
+      grade: r.student_id?.grade,
+      class_name: r.student_id?.class_name,
+      id: r._id
+    }));
+    res.json(formattedReports);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/reports', (req, res) => {
-  const { student_id, teacher_name, subject, violation_type, notes } = req.body;
-  const info = db.prepare('INSERT INTO reports (student_id, teacher_name, subject, violation_type, notes) VALUES (?, ?, ?, ?, ?)')
-    .run(student_id, teacher_name, subject, violation_type, notes);
-  res.json({ id: info.lastInsertRowid });
+app.post('/api/reports', async (req, res) => {
+  try {
+    const report = new Report(req.body);
+    await report.save();
+    res.json(report);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Statistics API
-app.get('/api/stats', (req, res) => {
-  const violationStats = db.prepare(`
-    SELECT violation_type, COUNT(*) as count 
-    FROM reports 
-    GROUP BY violation_type
-    ORDER BY count DESC
-  `).all();
-  
-  const classStats = db.prepare(`
-    SELECT students.class_name, COUNT(*) as count 
-    FROM reports 
-    JOIN students ON reports.student_id = students.id
-    GROUP BY students.class_name
-  `).all();
+app.get('/api/stats', async (req, res) => {
+  try {
+    const violationStats = await Report.aggregate([
+      { $group: { _id: "$violation_type", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $project: { violation_type: "$_id", count: 1, _id: 0 } }
+    ]);
 
-  res.json({ violationStats, classStats });
+    const reportsWithStudents = await Report.find().populate('student_id');
+    const classGroups = reportsWithStudents.reduce((acc, curr) => {
+      const className = curr.student_id?.class_name || 'Unknown';
+      acc[className] = (acc[className] || 0) + 1;
+      return acc;
+    }, {});
+
+    const classStats = Object.keys(classGroups).map(name => ({
+      class_name: name,
+      count: classGroups[name]
+    }));
+
+    res.json({ violationStats, classStats });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Serve Frontend
