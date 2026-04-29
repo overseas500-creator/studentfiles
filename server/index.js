@@ -1,9 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import sqlite3 from 'sqlite3';
 
 dotenv.config();
 
@@ -16,39 +16,36 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// SQLite Connection
-const dbPath = join(__dirname, '../school.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) console.error('Database connection error:', err);
-  else console.log('Connected to SQLite database');
+// MongoDB Connection
+const mongoURI = process.env.MONGODB_URI;
+if (!mongoURI) {
+  console.error('ERROR: MONGODB_URI environment variable is not set!');
+} else {
+  mongoose.connect(mongoURI)
+    .then(() => console.log('Connected to MongoDB Atlas'))
+    .catch(err => console.error('MongoDB connection error:', err));
+}
+
+// Schemas
+const studentSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  grade: { type: String, required: true },
+  class_name: { type: String, required: true },
+  phone: String,
+  student_number: { type: String, unique: true, required: true }
 });
 
-// Initialize Tables
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS students (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      grade TEXT NOT NULL,
-      class_name TEXT NOT NULL,
-      phone TEXT,
-      student_number TEXT UNIQUE NOT NULL
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS reports (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      student_id INTEGER NOT NULL,
-      teacher_name TEXT NOT NULL,
-      subject TEXT NOT NULL,
-      violation_type TEXT NOT NULL,
-      notes TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (student_id) REFERENCES students (id)
-    )
-  `);
+const reportSchema = new mongoose.Schema({
+  student_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
+  teacher_name: { type: String, required: true },
+  subject: { type: String, required: true },
+  violation_type: { type: String, required: true },
+  notes: String,
+  created_at: { type: Date, default: Date.now }
 });
+
+const Student = mongoose.model('Student', studentSchema);
+const Report = mongoose.model('Report', reportSchema);
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -57,75 +54,87 @@ app.use((req, res, next) => {
 });
 
 // Students API
-app.get('/api/students', (req, res) => {
-  db.all('SELECT * FROM students', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+app.get('/api/students', async (req, res) => {
+  try {
+    const students = await Student.find();
+    res.json(students.map(s => ({ ...s._doc, id: s._id })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/students', (req, res) => {
-  const { name, grade, class_name, phone, student_number } = req.body;
-  db.run(
-    'INSERT INTO students (name, grade, class_name, phone, student_number) VALUES (?, ?, ?, ?, ?)',
-    [name, grade, class_name, phone, student_number],
-    function(err) {
-      if (err) return res.status(400).json({ error: err.message });
-      res.json({ id: this.lastID, ...req.body });
-    }
-  );
+app.post('/api/students', async (req, res) => {
+  try {
+    const student = new Student(req.body);
+    await student.save();
+    res.json({ ...student._doc, id: student._id });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
-app.post('/api/students/bulk', (req, res) => {
-  const students = req.body;
-  db.serialize(() => {
-    const stmt = db.prepare('INSERT OR IGNORE INTO students (name, grade, class_name, phone, student_number) VALUES (?, ?, ?, ?, ?)');
-    students.forEach(s => {
-      stmt.run(s.name, s.grade, s.class_name, s.phone, s.student_number);
-    });
-    stmt.finalize((err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ success: true, count: students.length });
-    });
-  });
+app.post('/api/students/bulk', async (req, res) => {
+  try {
+    const students = req.body;
+    await Student.insertMany(students, { ordered: false }).catch(err => err.insertedDocs);
+    res.json({ success: true, count: students.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Reports API
-app.get('/api/reports', (req, res) => {
-  const query = `
-    SELECT r.*, s.name as student_name, s.grade, s.class_name, r.id as id
-    FROM reports r 
-    JOIN students s ON r.student_id = s.id 
-    ORDER BY r.created_at DESC
-  `;
-  db.all(query, [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+app.get('/api/reports', async (req, res) => {
+  try {
+    const reports = await Report.find().populate('student_id').sort({ created_at: -1 });
+    const formattedReports = reports.map(r => ({
+      ...r._doc,
+      student_name: r.student_id?.name,
+      grade: r.student_id?.grade,
+      class_name: r.student_id?.class_name,
+      id: r._id
+    }));
+    res.json(formattedReports);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/reports', (req, res) => {
-  const { student_id, teacher_name, subject, violation_type, notes } = req.body;
-  db.run(
-    'INSERT INTO reports (student_id, teacher_name, subject, violation_type, notes) VALUES (?, ?, ?, ?, ?)',
-    [student_id, teacher_name, subject, violation_type, notes],
-    function(err) {
-      if (err) return res.status(400).json({ error: err.message });
-      res.json({ id: this.lastID, ...req.body });
-    }
-  );
+app.post('/api/reports', async (req, res) => {
+  try {
+    const report = new Report(req.body);
+    await report.save();
+    res.json({ ...report._doc, id: report._id });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Statistics API
-app.get('/api/stats', (req, res) => {
-  db.all('SELECT violation_type, COUNT(*) as count FROM reports GROUP BY violation_type ORDER BY count DESC', [], (err, violationStats) => {
-    if (err) return res.status(500).json({ error: err.message });
-    
-    db.all('SELECT s.class_name, COUNT(*) as count FROM reports r JOIN students s ON r.student_id = s.id GROUP BY s.class_name', [], (err, classStats) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ violationStats, classStats });
-    });
-  });
+app.get('/api/stats', async (req, res) => {
+  try {
+    const violationStats = await Report.aggregate([
+      { $group: { _id: "$violation_type", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $project: { violation_type: "$_id", count: 1, _id: 0 } }
+    ]);
+
+    const reportsWithStudents = await Report.find().populate('student_id');
+    const classGroups = reportsWithStudents.reduce((acc, curr) => {
+      const className = curr.student_id?.class_name || 'Unknown';
+      acc[className] = (acc[className] || 0) + 1;
+      return acc;
+    }, {});
+
+    const classStats = Object.keys(classGroups).map(name => ({
+      class_name: name,
+      count: classGroups[name]
+    }));
+
+    res.json({ violationStats, classStats });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Serve Frontend
