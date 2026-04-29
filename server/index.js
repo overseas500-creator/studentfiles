@@ -19,15 +19,19 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // MongoDB Connection
 const mongoURI = process.env.MONGODB_URI;
-mongoose.set('bufferCommands', false); // Disable buffering to see real errors immediately
 
-if (!mongoURI) {
-  console.error('ERROR: MONGODB_URI environment variable is not set!');
-} else {
-  mongoose.connect(mongoURI)
-    .then(() => console.log('Connected to MongoDB Atlas'))
-    .catch(err => console.error('MongoDB connection error:', err));
-}
+const connectDB = async () => {
+  try {
+    if (!mongoURI) throw new Error('MONGODB_URI is not set');
+    await mongoose.connect(mongoURI);
+    console.log('Connected to MongoDB Atlas');
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    // Don't exit process, let it retry or show errors
+  }
+};
+
+connectDB();
 
 // Schemas
 const studentSchema = new mongoose.Schema({
