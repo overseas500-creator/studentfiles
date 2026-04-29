@@ -68,9 +68,14 @@ const AdminDashboard = () => {
         await axios.post('/api/students/bulk', formattedStudents);
         alert(`تم استيراد ${formattedStudents.length} طالب بنجاح`);
         fetchStudents();
-      } catch (err) {
+      } catch (err: any) {
         console.error(err);
-        alert('حدث خطأ أثناء قراءة الملف');
+        const errorMessage = err.response?.data?.error || err.message;
+        if (err.response) {
+          alert(`خطأ من الخادم: ${errorMessage}`);
+        } else {
+          alert('حدث خطأ أثناء قراءة الملف أو مشكلة في الاتصال');
+        }
       } finally {
         setImportLoading(false);
         e.target.value = '';
