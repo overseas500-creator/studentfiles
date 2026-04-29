@@ -60,8 +60,13 @@ app.use((req, res, next) => {
 app.get('/api/students', async (req, res) => {
   try {
     const students = await Student.find();
-    res.json(students.map(s => ({ ...s._doc, id: s._id })));
+    console.log(`[Database] Found ${students.length} students in collection.`);
+    res.json(students.map(s => {
+      const obj = s.toObject();
+      return { ...obj, id: obj._id };
+    }));
   } catch (err) {
+    console.error('[Database Error] Fetch failed:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
