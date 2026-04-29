@@ -26,11 +26,11 @@ function App() {
   };
 
   const RoleCard = ({ title, icon: Icon, onClick, color }: any) => (
-    <div className="glass-card animate-fade" style={{ cursor: 'pointer', textAlign: 'center', transition: 'all 0.3s' }} onClick={onClick}>
-      <div style={{ background: color, width: '64px', height: '64px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-        <Icon size={32} color="white" />
+    <div className="glass-card animate-fade" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '20px', padding: '24px', transition: 'all 0.3s', textAlign: 'right' }} onClick={onClick}>
+      <h3 style={{ margin: 0, flex: 1, fontSize: '1.25rem' }}>{title}</h3>
+      <div style={{ background: color, width: '56px', height: '56px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={28} color="white" />
       </div>
-      <h3 style={{ marginBottom: '8px' }}>{title}</h3>
     </div>
   );
 
@@ -41,9 +41,9 @@ function App() {
           <h1 style={{ fontSize: '3rem', marginBottom: '10px', textAlign: 'center', color: 'var(--primary)' }}>منصة الضبط المدرسي</h1>
           <p style={{ color: 'var(--text-muted)', marginBottom: '40px' }}>نظام المراسلة والأرشفة المتكامل</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', width: '100%', maxWidth: '900px' }}>
-            <RoleCard title="الأدمن (الإدارة)" icon={Shield} onClick={() => handleRoleSelection('ADMIN')} color="#4f46e5" />
             <RoleCard title="المعلم" icon={GraduationCap} onClick={() => handleRoleSelection('TEACHER')} color="#059669" />
             <RoleCard title="وكيل المدرسة / الموجه الطلابي" icon={LayoutDashboard} onClick={() => handleRoleSelection('COUNSELOR')} color="#d97706" />
+            <RoleCard title="مدير النظام" icon={Shield} onClick={() => handleRoleSelection('ADMIN')} color="#4f46e5" />
           </div>
         </div>
         <footer>
