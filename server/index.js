@@ -19,6 +19,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // MongoDB Connection
 const mongoURI = process.env.MONGODB_URI;
+mongoose.set('bufferCommands', false); // Disable buffering to see real errors immediately
+
 if (!mongoURI) {
   console.error('ERROR: MONGODB_URI environment variable is not set!');
 } else {
