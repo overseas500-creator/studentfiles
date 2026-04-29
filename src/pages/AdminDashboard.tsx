@@ -7,7 +7,7 @@ const AdminDashboard = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: '',
-    grade: 'الأول الثانوي',
+    grade: '',
     class_name: '',
     phone: '',
     student_number: ''
@@ -31,7 +31,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     try {
       await axios.post('/api/students', formData);
-      setFormData({ name: '', grade: 'الأول الثانوي', class_name: '', phone: '', student_number: '' });
+      setFormData({ name: '', grade: '', class_name: '', phone: '', student_number: '' });
       fetchStudents();
     } catch (err) {
       alert('Error adding student');
@@ -116,15 +116,13 @@ const AdminDashboard = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem' }}>الصف</label>
-                <select 
+                <input 
                   className="input-field"
+                  required
                   value={formData.grade}
                   onChange={(e) => setFormData({...formData, grade: e.target.value})}
-                >
-                  <option>الأول الثانوي</option>
-                  <option>الثاني الثانوي</option>
-                  <option>الثالث الثانوي</option>
-                </select>
+                  placeholder="مثال: الأول الثانوي"
+                />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem' }}>الفصل</label>

@@ -13,7 +13,7 @@ const violations = [
 
 const TeacherView = () => {
   const [students, setStudents] = useState<any[]>([]);
-  const [selectedGrade, setSelectedGrade] = useState('الأول الثانوي');
+  const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [selectedViolation, setSelectedViolation] = useState('');
@@ -87,9 +87,10 @@ const TeacherView = () => {
                   value={selectedGrade}
                   onChange={(e) => setSelectedGrade(e.target.value)}
                 >
-                  <option>الأول الثانوي</option>
-                  <option>الثاني الثانوي</option>
-                  <option>الثالث الثانوي</option>
+                  <option value="">اختر الصف...</option>
+                  {[...new Set(students.map(s => s.grade?.trim()))].filter(Boolean).sort().map(grade => (
+                    <option key={grade} value={grade}>{grade}</option>
+                  ))}
                 </select>
               </div>
               <div>

@@ -201,10 +201,10 @@ const CounselorDashboard = () => {
               value={filterGrade}
               onChange={(e) => setFilterGrade(e.target.value)}
             >
-              <option>الكل</option>
-              <option>الأول الثانوي</option>
-              <option>الثاني الثانوي</option>
-              <option>الثالث الثانوي</option>
+              <option value="الكل">جميع الصفوف</option>
+              {[...new Set(reports.map(r => r.grade?.trim()))].filter(Boolean).sort().map(grade => (
+                <option key={grade} value={grade}>{grade}</option>
+              ))}
             </select>
             <input 
               className="input-field" 
