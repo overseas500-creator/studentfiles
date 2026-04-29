@@ -16,7 +16,8 @@ function App() {
   };
 
   const handleLogin = () => {
-    if (password === '1245') {
+    const requiredPassword = showPassModal === 'ADMIN' ? '1256' : '1245';
+    if (password === requiredPassword) {
       setRole(showPassModal);
       setShowPassModal('NONE');
       setPassword('');
