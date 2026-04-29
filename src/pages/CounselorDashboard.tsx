@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { FileText, Printer, BarChart3, TrendingUp, Filter, Search } from 'lucide-react';
+import { FileText, Printer, BarChart3, TrendingUp, Filter, Search, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
 const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -155,6 +155,16 @@ const CounselorDashboard = () => {
         </html>
       `);
       printWindow.document.close();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('هل أنت متأكد من حذف هذه المخالفة؟')) return;
+    try {
+      await axios.delete(`/api/reports/${id}`);
+      fetchData();
+    } catch (err) {
+      alert('حدث خطأ أثناء الحذف');
     }
   };
 
@@ -320,13 +330,23 @@ const CounselorDashboard = () => {
                     </span>
                   </td>
                   <td style={{ padding: '16px' }}>
-                    <button 
-                      onClick={() => handlePrint(report.student_id)}
-                      className="btn-primary" 
-                      style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'white', border: '1px solid var(--primary)', color: 'var(--primary)' }}
-                    >
-                      <Printer size={14} style={{ marginLeft: '4px' }} /> طباعة أرشيف
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        onClick={() => handlePrint(report.student_id)}
+                        className="btn-primary" 
+                        style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'white', border: '1px solid var(--primary)', color: 'var(--primary)' }}
+                      >
+                        <Printer size={14} style={{ marginLeft: '4px' }} /> طباعة أرشيف
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(report.id)}
+                        className="btn-primary" 
+                        style={{ padding: '6px 10px', fontSize: '0.8rem', background: 'white', border: '1px solid var(--danger)', color: 'var(--danger)' }}
+                        title="حذف المخالفة"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

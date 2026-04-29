@@ -130,6 +130,15 @@ app.post('/api/reports', async (req, res) => {
   }
 });
 
+app.delete('/api/reports/:id', async (req, res) => {
+  try {
+    await Report.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Statistics API
 app.get('/api/stats', async (req, res) => {
   try {
