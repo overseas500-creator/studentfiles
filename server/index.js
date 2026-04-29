@@ -141,7 +141,8 @@ app.get('/api/stats', async (req, res) => {
 const distPath = join(__dirname, '../dist');
 app.use(express.static(distPath));
 
-app.get('*', (req, res) => {
+// Catch-all for SPA - compatible with Express 5
+app.get('/*', (req, res) => {
   res.sendFile(join(distPath, 'index.html'));
 });
 
