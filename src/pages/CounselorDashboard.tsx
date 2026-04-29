@@ -206,13 +206,22 @@ const CounselorDashboard = () => {
                 <option key={grade} value={grade}>{grade}</option>
               ))}
             </select>
-            <input 
+            <select 
               className="input-field" 
-              placeholder="الفصل (1/1)" 
-              style={{ width: '100px', padding: '10px' }}
+              style={{ width: '120px', padding: '10px' }}
               value={filterClass}
               onChange={(e) => setFilterClass(e.target.value)}
-            />
+              disabled={filterGrade === 'الكل'}
+            >
+              <option value="">جميع الفصول</option>
+              {[...new Set(
+                reports
+                  .filter(r => r.grade?.trim() === filterGrade.trim())
+                  .map(r => r.class_name?.trim())
+              )].filter(Boolean).sort().map(cls => (
+                <option key={cls} value={cls}>{cls}</option>
+              ))}
+            </select>
           </div>
         </div>
 

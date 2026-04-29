@@ -95,12 +95,21 @@ const TeacherView = () => {
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>الفصل</label>
-                <input 
+                <select 
                   className="input-field" 
-                  placeholder="مثال: 1/1" 
                   value={selectedClass}
                   onChange={(e) => setSelectedClass(e.target.value)}
-                />
+                  disabled={!selectedGrade}
+                >
+                  <option value="">جميع الفصول</option>
+                  {[...new Set(
+                    students
+                      .filter(s => s.grade?.trim() === selectedGrade.trim())
+                      .map(s => s.class_name?.trim())
+                  )].filter(Boolean).sort().map(cls => (
+                    <option key={cls} value={cls}>{cls}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
