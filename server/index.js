@@ -141,8 +141,8 @@ app.get('/api/stats', async (req, res) => {
 const distPath = join(__dirname, '../dist');
 app.use(express.static(distPath));
 
-// Catch-all for SPA - compatible with Express 5
-app.get('/*', (req, res) => {
+// Fallback for SPA - matches all routes without path-to-regexp issues
+app.use((req, res) => {
   res.sendFile(join(distPath, 'index.html'));
 });
 
