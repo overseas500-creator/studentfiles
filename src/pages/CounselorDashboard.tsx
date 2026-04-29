@@ -159,7 +159,11 @@ const CounselorDashboard = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف هذه المخالفة؟')) return;
+    const pass = window.prompt('يرجى إدخال الرقم السري لمدير النظام لتأكيد الحذف:');
+    if (pass !== '1256') {
+      if (pass !== null) alert('الرقم السري غير صحيح');
+      return;
+    }
     try {
       await axios.delete(`/api/reports/${id}`);
       fetchData();
