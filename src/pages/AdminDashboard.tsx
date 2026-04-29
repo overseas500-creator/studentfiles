@@ -53,11 +53,11 @@ const AdminDashboard = () => {
         const data = XLSX.utils.sheet_to_json(ws);
 
         const formattedStudents = data.map((row: any) => ({
-          name: row['اسم الطالب'] || row['الاسم'],
-          grade: row['الصف'] || 'الأول الثانوي',
-          class_name: row['الفصل'] || '',
-          phone: row['رقم الجوال'] || row['الجوال'],
-          student_number: String(row['رقم الطالب'] || row['الهوية'] || '')
+          name: (row['اسم الطالب'] || row['الاسم'] || '').trim(),
+          grade: (row['الصف'] || 'الأول الثانوي').trim(),
+          class_name: (row['الفصل'] || '').trim(),
+          phone: (row['رقم الجوال'] || row['الجوال'] || '').trim(),
+          student_number: String(row['رقم الطالب'] || row['الهوية'] || '').trim()
         })).filter(s => s.name && s.student_number);
 
         if (formattedStudents.length === 0) {

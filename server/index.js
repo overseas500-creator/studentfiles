@@ -77,9 +77,14 @@ app.post('/api/students', async (req, res) => {
 app.post('/api/students/bulk', async (req, res) => {
   try {
     const students = req.body;
-    await Student.insertMany(students, { ordered: false }).catch(err => err.insertedDocs);
-    res.json({ success: true, count: students.length });
+    const result = await Student.insertMany(students, { ordered: false });
+    res.json({ success: true, count: result.length });
   } catch (err) {
+    // If some were inserted and some failed (e.g. duplicates), we still return success with the count of what was inserted
+    const insertedCount = err.insertedDocs ? err.insertedDocs.length : 0;
+    if (insertedCount > 0) {
+      return res.json({ success: true, count: insertedCount });
+    }
     res.status(500).json({ error: err.message });
   }
 });

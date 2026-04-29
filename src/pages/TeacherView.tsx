@@ -37,7 +37,7 @@ const TeacherView = () => {
   };
 
   const filteredStudents = students.filter(s => 
-    s.grade === selectedGrade && (selectedClass ? s.class_name.includes(selectedClass) : true)
+    s.grade?.trim() === selectedGrade.trim() && (selectedClass ? s.class_name?.includes(selectedClass.trim()) : true)
   );
 
   const handleSubmit = async () => {
