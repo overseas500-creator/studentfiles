@@ -25,15 +25,18 @@ const connectDB = async () => {
     if (!mongoURI) throw new Error('MONGODB_URI is not set');
     await mongoose.connect(mongoURI);
     console.log('Connected to MongoDB Atlas');
+    
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`Server running on port ${port}`);
+    });
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
-    // Don't exit process, let it retry or show errors
+    // Exit if cannot connect to DB on startup
+    process.exit(1);
   }
 };
 
 connectDB();
-
-// Schemas
 const studentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   grade: { type: String, required: true },
@@ -161,9 +164,5 @@ app.use(express.static(distPath));
 // Fallback for SPA - matches all routes without path-to-regexp issues
 app.use((req, res) => {
   res.sendFile(join(distPath, 'index.html'));
-});
-
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server running on port ${port}`);
 });
 
