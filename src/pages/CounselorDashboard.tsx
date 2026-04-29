@@ -36,9 +36,21 @@ const CounselorDashboard = () => {
     return matchesSearch && matchesGrade && matchesClass;
   });
 
-  const handlePrint = (studentId: number) => {
-    const studentReports = reports.filter(r => r.student_id === studentId);
-    const studentName = studentReports[0]?.student_name || 'طالب';
+  const handlePrint = (student: any) => {
+    const targetId = String(student?._id || student);
+    const studentReports = reports.filter(r => {
+      const rStudentId = String(r.student_id?._id || r.student_id);
+      return rStudentId === targetId;
+    });
+
+    if (studentReports.length === 0) return;
+
+    // Sort reports by date (oldest first) for a chronological archive
+    const sortedReports = [...studentReports].sort((a, b) => 
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+
+    const studentName = sortedReports[0]?.student_name || 'طالب';
     
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -47,33 +59,66 @@ const CounselorDashboard = () => {
           <head>
             <title>تقرير أرشيف الطالب - ${studentName}</title>
             <style>
-              body { font-family: 'Arial', sans-serif; padding: 40px; color: #333; }
-              h1 { border-bottom: 2px solid #333; padding-bottom: 10px; }
-              .student-info { margin-bottom: 30px; }
+              @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+              body { font-family: 'Cairo', 'Arial', sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+              .header { text-align: center; margin-bottom: 40px; border-bottom: 3px double #333; padding-bottom: 20px; }
+              h1 { margin: 0; color: #1a365d; }
+              .student-info { 
+                background: #f8fafc; 
+                padding: 20px; 
+                border-radius: 8px; 
+                margin-bottom: 30px;
+                border: 1px solid #e2e8f0;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+              }
+              .student-info p { margin: 5px 0; }
               table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-              th, td { border: 1px solid #ddd; padding: 12px; text-align: right; }
-              th { background-color: #f5f5f5; }
-              .footer { margin-top: 50px; display: flex; justify-content: space-between; }
+              th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: right; }
+              th { background-color: #f1f5f9; color: #475569; font-weight: 700; }
+              tr:nth-child(even) { background-color: #f8fafc; }
+              .summary { margin-top: 20px; font-weight: bold; color: #2563eb; }
+              .footer { margin-top: 60px; display: flex; justify-content: space-between; }
+              .signature { text-align: center; width: 200px; }
+              .signature p { margin-bottom: 40px; }
+              @media print {
+                body { padding: 20px; }
+                .btn-print { display: none; }
+              }
             </style>
           </head>
           <body>
-            <h1>سجل انضباط الطالب</h1>
-            <div class="student-info">
-              <p><strong>اسم الطالب:</strong> ${studentName}</p>
-              <p><strong>الصف/الفصل:</strong> ${studentReports[0]?.grade} - ${studentReports[0]?.class_name}</p>
+            <div class="header">
+              <h1>سجل انضباط الطالب (تقرير تجميعي)</h1>
+              <p>منصة الضبط المدرسي</p>
             </div>
+            
+            <div class="student-info">
+              <div>
+                <p><strong>اسم الطالب:</strong> ${studentName}</p>
+                <p><strong>الصف الدراسي:</strong> ${sortedReports[0]?.grade || '-'}</p>
+              </div>
+              <div>
+                <p><strong>الفصل:</strong> ${sortedReports[0]?.class_name || '-'}</p>
+                <p><strong>تاريخ التقرير:</strong> ${new Date().toLocaleDateString('ar-SA')}</p>
+              </div>
+            </div>
+
+            <p class="summary">إجمالي عدد المخالفات المسجلة: ${sortedReports.length}</p>
+
             <table>
               <thead>
                 <tr>
-                  <th>التاريخ</th>
-                  <th>المعلم</th>
-                  <th>المادة</th>
-                  <th>المخالفة</th>
-                  <th>ملاحظات</th>
+                  <th style="width: 15%">التاريخ</th>
+                  <th style="width: 20%">المعلم</th>
+                  <th style="width: 15%">المادة</th>
+                  <th style="width: 25%">المخالفة</th>
+                  <th style="width: 25%">ملاحظات</th>
                 </tr>
               </thead>
               <tbody>
-                ${studentReports.map(r => `
+                ${sortedReports.map(r => `
                   <tr>
                     <td>${new Date(r.created_at).toLocaleDateString('ar-SA')}</td>
                     <td>${r.teacher_name}</td>
@@ -84,11 +129,28 @@ const CounselorDashboard = () => {
                 `).join('')}
               </tbody>
             </table>
+
             <div class="footer">
-              <p>توقيع وكيل المدرسة: _______________</p>
-              <p>توقيع الموجه الطلابي: _______________</p>
+              <div class="signature">
+                <p>توقيع وكيل المدرسة</p>
+                <p>_________________</p>
+              </div>
+              <div class="signature">
+                <p>توقيع الموجه الطلابي</p>
+                <p>_________________</p>
+              </div>
+              <div class="signature">
+                <p>ختم المدرسة</p>
+                <p>_________________</p>
+              </div>
             </div>
-            <script>window.print();</script>
+            
+            <script>
+              window.onload = () => {
+                window.print();
+                // window.close(); // Optional: close window after printing
+              };
+            </script>
           </body>
         </html>
       `);
