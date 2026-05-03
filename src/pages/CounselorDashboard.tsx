@@ -158,6 +158,16 @@ const CounselorDashboard = () => {
     }
   };
 
+  const handleStatusChange = async (id: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'done' ? 'pending' : 'done';
+      await axios.patch(`/api/reports/${id}/status`, { status: newStatus });
+      fetchData();
+    } catch (err) {
+      alert('حدث خطأ أثناء تحديث حالة البلاغ');
+    }
+  };
+
   const handleDelete = async (id: string) => {
     const pass = window.prompt('يرجى إدخال الرقم السري لمدير النظام لتأكيد الحذف:');
     if (pass !== '1256') {
@@ -315,7 +325,15 @@ const CounselorDashboard = () => {
             </thead>
             <tbody>
               {filteredReports.map((report) => (
-                <tr key={report.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                <tr 
+                  key={report.id} 
+                  style={{ 
+                    borderBottom: '1px solid var(--border)',
+                    backgroundColor: report.status === 'done' ? '#f3f4f6' : 'transparent',
+                    transition: 'background-color 0.3s ease',
+                    opacity: report.status === 'done' ? 0.7 : 1
+                  }}
+                >
                   <td style={{ padding: '16px', fontSize: '0.9rem' }}>{new Date(report.created_at).toLocaleDateString('ar-SA')}</td>
                   <td style={{ padding: '16px', fontWeight: 600 }}>{report.student_name}</td>
                   <td style={{ padding: '16px' }}>{report.grade} - {report.class_name}</td>
@@ -324,10 +342,10 @@ const CounselorDashboard = () => {
                     <span style={{ 
                       padding: '4px 12px', 
                       borderRadius: '20px', 
-                      background: 'rgba(239, 68, 68, 0.05)', 
-                      color: 'var(--danger)',
+                      background: report.status === 'done' ? 'rgba(107, 114, 128, 0.1)' : 'rgba(239, 68, 68, 0.05)', 
+                      color: report.status === 'done' ? '#6b7280' : 'var(--danger)',
                       fontSize: '0.8rem',
-                      border: '1px solid rgba(239, 68, 68, 0.1)',
+                      border: report.status === 'done' ? '1px solid rgba(107, 114, 128, 0.2)' : '1px solid rgba(239, 68, 68, 0.1)',
                       fontWeight: 600
                     }}>
                       {report.violation_type}
@@ -335,6 +353,19 @@ const CounselorDashboard = () => {
                   </td>
                   <td style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        onClick={() => handleStatusChange(report.id, report.status)}
+                        className="btn-primary" 
+                        style={{ 
+                          padding: '6px 12px', 
+                          fontSize: '0.8rem', 
+                          background: report.status === 'done' ? '#10b981' : 'white', 
+                          border: report.status === 'done' ? '1px solid #10b981' : '1px solid #10b981', 
+                          color: report.status === 'done' ? 'white' : '#10b981' 
+                        }}
+                      >
+                        {report.status === 'done' ? 'ملغي' : 'تم'}
+                      </button>
                       <button 
                         onClick={() => handlePrint(report.student_id)}
                         className="btn-primary" 

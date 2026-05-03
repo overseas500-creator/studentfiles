@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import serverless from 'serverless-http';
 
 dotenv.config();
 
@@ -26,9 +27,11 @@ const connectDB = async () => {
     await mongoose.connect(mongoURI);
     console.log('Connected to MongoDB Atlas');
     
-    app.listen(port, '0.0.0.0', () => {
-      console.log(`Server running on port ${port}`);
-    });
+    if (process.env.NODE_ENV !== 'production' || !process.env.NETLIFY) {
+      app.listen(port, '0.0.0.0', () => {
+        console.log(`Server running on port ${port}`);
+      });
+    }
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
     // Exit if cannot connect to DB on startup
@@ -51,6 +54,7 @@ const reportSchema = new mongoose.Schema({
   subject: { type: String, required: true },
   violation_type: { type: String, required: true },
   notes: String,
+  status: { type: String, default: 'pending' },
   created_at: { type: Date, default: Date.now }
 });
 
@@ -139,6 +143,16 @@ app.delete('/api/reports/:id', async (req, res) => {
   }
 });
 
+app.patch('/api/reports/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    await Report.findByIdAndUpdate(req.params.id, { status });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Statistics API
 app.get('/api/stats', async (req, res) => {
   try {
@@ -174,4 +188,8 @@ app.use(express.static(distPath));
 app.use((req, res) => {
   res.sendFile(join(distPath, 'index.html'));
 });
+
+// Export for Netlify Functions
+export const handler = serverless(app);
+export default app;
 
