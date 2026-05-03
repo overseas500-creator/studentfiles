@@ -145,6 +145,36 @@ app.post('/api/teachers/bulk', async (req, res) => {
   }
 });
 
+app.post('/api/teachers', async (req, res) => {
+  try {
+    const teacher = new Teacher(req.body);
+    await teacher.save();
+    res.json({ ...teacher._doc, id: teacher._id });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/students/:id', async (req, res) => {
+  try {
+    await Student.findByIdAndDelete(req.params.id);
+    // Also delete reports for this student? (Optional but good for consistency)
+    await Report.deleteMany({ student_id: req.params.id });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/teachers/:id', async (req, res) => {
+  try {
+    await Teacher.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/teachers/login', async (req, res) => {
   try {
     const { national_id } = req.body;

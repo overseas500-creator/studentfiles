@@ -66,6 +66,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteStudent = async (id: string) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا الطالب؟ سيتم حذف جميع تقاريره أيضاً.')) {
+      try {
+        await axios.delete(`/api/students/${id}`);
+        fetchStudents();
+      } catch (err) {
+        alert('خطأ في حذف الطالب');
+      }
+    }
+  };
+
+  const handleDeleteTeacher = async (id: string) => {
+    if (window.confirm('هل أنت متأكد من حذف هذا المعلم؟')) {
+      try {
+        await axios.delete(`/api/teachers/${id}`);
+        fetchTeachers();
+      } catch (err) {
+        alert('خطأ في حذف المعلم');
+      }
+    }
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'students' | 'teachers') => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -339,7 +361,7 @@ const AdminDashboard = () => {
                     <td style={{ padding: '12px' }}>{student.student_number}</td>
                     <td style={{ padding: '12px' }}>{student.phone}</td>
                     <td style={{ padding: '12px' }}>
-                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>
+                      <button onClick={() => handleDeleteStudent(student.id || student._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>
                         <Trash2 size={18} />
                       </button>
                     </td>
@@ -364,7 +386,7 @@ const AdminDashboard = () => {
                     <td style={{ padding: '12px' }}>{teacher.national_id}</td>
                     <td style={{ padding: '12px' }}>{teacher.subject}</td>
                     <td style={{ padding: '12px' }}>
-                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>
+                      <button onClick={() => handleDeleteTeacher(teacher.id || teacher._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>
                         <Trash2 size={18} />
                       </button>
                     </td>
