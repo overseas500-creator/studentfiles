@@ -7,7 +7,7 @@ const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
 
 const CounselorDashboard = () => {
   const [reports, setReports] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>({ violationStats: [], classStats: [] });
+  const [stats, setStats] = useState<any>({ violationStats: [], classStats: [], gradeStats: [] });
   const [searchQuery, setSearchQuery] = useState('');
   const [filterGrade, setFilterGrade] = useState('الكل');
   const [filterClass, setFilterClass] = useState('');
@@ -234,16 +234,16 @@ const CounselorDashboard = () => {
 
         <div className="glass-card" style={{ minHeight: '450px', display: 'flex', flexDirection: 'column' }}>
           <h3 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Filter size={20} color="var(--primary)" />
-            توزيع البلاغات حسب الفصول
+            <TrendingUp size={20} color="var(--primary)" />
+            توزيع البلاغات حسب الصفوف
           </h3>
           <div style={{ flex: 1, minHeight: '300px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={stats.classStats}
+                  data={stats.gradeStats}
                   dataKey="count"
-                  nameKey="class_name"
+                  nameKey="grade_name"
                   cx="50%"
                   cy="50%"
                   innerRadius={70}
@@ -251,7 +251,7 @@ const CounselorDashboard = () => {
                   paddingAngle={5}
                   label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
                 >
-                  {stats.classStats.map((_entry: any, index: number) => (
+                  {stats.gradeStats.map((_entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -268,6 +268,57 @@ const CounselorDashboard = () => {
               </PieChart>
             </ResponsiveContainer>
           </div>
+        </div>
+      </div>
+
+      {/* Hierarchical Breakdown Section */}
+      <div className="glass-card" style={{ marginBottom: '32px' }}>
+        <h3 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Filter size={20} color="var(--primary)" />
+          تفاصيل البلاغات حسب الصفوف والفصول
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          {stats.gradeStats.map((grade: any, idx: number) => (
+            <div key={idx} style={{ 
+              background: '#f8fafc', 
+              borderRadius: '16px', 
+              padding: '20px', 
+              border: '1px solid var(--border)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 style={{ margin: 0, color: COLORS[idx % COLORS.length], fontSize: '1.1rem' }}>{grade.grade_name}</h4>
+                <span style={{ 
+                  background: 'white', 
+                  padding: '4px 12px', 
+                  borderRadius: '20px', 
+                  fontSize: '0.85rem', 
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                }}>
+                  {grade.count} بلاغ
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {grade.classes.map((cls: any, cidx: number) => (
+                  <div key={cidx} style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    padding: '8px 12px', 
+                    background: 'white', 
+                    borderRadius: '10px',
+                    fontSize: '0.9rem'
+                  }}>
+                    <span>فصل {cls.class_name}</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{cls.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

@@ -214,18 +214,39 @@ app.get('/api/stats', async (req, res) => {
     ]);
 
     const reportsWithStudents = await Report.find().populate('student_id');
-    const classGroups = reportsWithStudents.reduce((acc, curr) => {
-      const className = curr.student_id?.class_name || 'Unknown';
-      acc[className] = (acc[className] || 0) + 1;
-      return acc;
-    }, {});
+    
+    // Hierarchical stats: Grade -> Classes
+    const gradeMap = {};
+    reportsWithStudents.forEach(curr => {
+      const grade = curr.student_id?.grade || 'غير محدد';
+      const className = curr.student_id?.class_name || 'غير محدد';
+      
+      if (!gradeMap[grade]) {
+        gradeMap[grade] = { 
+          grade_name: grade, 
+          count: 0, 
+          classes: {} 
+        };
+      }
+      
+      gradeMap[grade].count += 1;
+      gradeMap[grade].classes[className] = (gradeMap[grade].classes[className] || 0) + 1;
+    });
 
-    const classStats = Object.keys(classGroups).map(name => ({
-      class_name: name,
-      count: classGroups[name]
-    }));
+    const gradeStats = Object.values(gradeMap).map(g => ({
+      ...g,
+      classes: Object.keys(g.classes).map(name => ({
+        class_name: name,
+        count: g.classes[name]
+      })).sort((a, b) => b.count - a.count)
+    })).sort((a, b) => b.count - a.count);
 
-    res.json({ violationStats, classStats });
+    // Flat class stats for backward compatibility if needed, but we'll use gradeStats
+    const classStats = gradeStats.reduce((acc, g) => {
+      return acc.concat(g.classes);
+    }, []).sort((a, b) => b.count - a.count);
+
+    res.json({ violationStats, gradeStats, classStats });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
