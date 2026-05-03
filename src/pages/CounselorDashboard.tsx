@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
 import { FileText, Printer, BarChart3, TrendingUp, Filter, Search, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
@@ -235,7 +235,7 @@ const CounselorDashboard = () => {
         <div className="glass-card" style={{ minHeight: '450px', display: 'flex', flexDirection: 'column' }}>
           <h3 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Filter size={20} color="var(--primary)" />
-            حالة الانضباط حسب الفصول
+            توزيع البلاغات حسب الفصول
           </h3>
           <div style={{ flex: 1, minHeight: '300px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -246,16 +246,25 @@ const CounselorDashboard = () => {
                   nameKey="class_name"
                   cx="50%"
                   cy="50%"
+                  innerRadius={70}
                   outerRadius={100}
-                  label
+                  paddingAngle={5}
+                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                 >
                   {stats.classStats.map((_entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip 
-                  contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: 'var(--shadow)' }}
+                  contentStyle={{ 
+                    background: '#fff', 
+                    border: 'none', 
+                    borderRadius: '12px', 
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    padding: '12px'
+                  }}
                 />
+                <Legend verticalAlign="bottom" height={36}/>
               </PieChart>
             </ResponsiveContainer>
           </div>
