@@ -12,7 +12,11 @@ function App() {
   const [showPassModal, setShowPassModal] = useState<Role>('NONE');
 
   const handleRoleSelection = (selectedRole: Role) => {
-    setShowPassModal(selectedRole);
+    if (selectedRole === 'TEACHER') {
+      setRole('TEACHER');
+    } else {
+      setShowPassModal(selectedRole);
+    }
   };
 
   const handleLogin = () => {
