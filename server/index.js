@@ -48,8 +48,15 @@ const studentSchema = new mongoose.Schema({
   student_number: { type: String, unique: true, required: true }
 });
 
+const teacherSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  national_id: { type: String, unique: true, required: true },
+  subject: { type: String }
+});
+
 const reportSchema = new mongoose.Schema({
   student_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
+  teacher_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' },
   teacher_name: { type: String, required: true },
   subject: { type: String, required: true },
   violation_type: { type: String, required: true },
@@ -59,6 +66,7 @@ const reportSchema = new mongoose.Schema({
 });
 
 const Student = mongoose.model('Student', studentSchema);
+const Teacher = mongoose.model('Teacher', teacherSchema);
 const Report = mongoose.model('Report', reportSchema);
 
 // Logging middleware
@@ -98,11 +106,47 @@ app.post('/api/students/bulk', async (req, res) => {
     const result = await Student.insertMany(students, { ordered: false });
     res.json({ success: true, count: result.length });
   } catch (err) {
-    // If some were inserted and some failed (e.g. duplicates), we still return success with the count of what was inserted
     const insertedCount = err.insertedDocs ? err.insertedDocs.length : 0;
     if (insertedCount > 0) {
       return res.json({ success: true, count: insertedCount });
     }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Teachers API
+app.get('/api/teachers', async (req, res) => {
+  try {
+    const teachers = await Teacher.find();
+    res.json(teachers.map(t => ({ ...t._doc, id: t._id })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/teachers/bulk', async (req, res) => {
+  try {
+    const teachers = req.body;
+    const result = await Teacher.insertMany(teachers, { ordered: false });
+    res.json({ success: true, count: result.length });
+  } catch (err) {
+    const insertedCount = err.insertedDocs ? err.insertedDocs.length : 0;
+    if (insertedCount > 0) {
+      return res.json({ success: true, count: insertedCount });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/teachers/login', async (req, res) => {
+  try {
+    const { national_id } = req.body;
+    const teacher = await Teacher.findOne({ national_id });
+    if (!teacher) {
+      return res.status(404).json({ error: 'المعلم غير موجود. يرجى التأكد من رقم الهوية' });
+    }
+    res.json({ ...teacher._doc, id: teacher._id });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
