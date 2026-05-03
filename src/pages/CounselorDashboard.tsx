@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { FileText, Printer, BarChart3, TrendingUp, Filter, Search, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
@@ -239,23 +239,21 @@ const CounselorDashboard = () => {
           </h3>
           <div style={{ flex: 1, minHeight: '300px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={stats.gradeStats}
-                  dataKey="count"
-                  nameKey="grade_name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
-                >
-                  {stats.gradeStats.map((_entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
+              <BarChart data={stats.gradeStats} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis 
+                  dataKey="grade_name" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+                />
                 <Tooltip 
+                  cursor={{ fill: 'rgba(0,0,0,0.02)' }}
                   contentStyle={{ 
                     background: '#fff', 
                     border: 'none', 
@@ -264,8 +262,12 @@ const CounselorDashboard = () => {
                     padding: '12px'
                   }}
                 />
-                <Legend verticalAlign="bottom" height={36}/>
-              </PieChart>
+                <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={40}>
+                  {stats.gradeStats.map((_entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
