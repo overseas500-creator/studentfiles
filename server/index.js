@@ -23,7 +23,10 @@ const mongoURI = process.env.MONGODB_URI;
 
 const connectDB = async () => {
   try {
-    if (!mongoURI) throw new Error('MONGODB_URI is not set');
+    if (!mongoURI) {
+      console.warn('MONGODB_URI is not set. Database connection skipped during build or if not required.');
+      return;
+    }
     await mongoose.connect(mongoURI);
     console.log('Connected to MongoDB Atlas');
     
@@ -34,8 +37,12 @@ const connectDB = async () => {
     }
   } catch (err) {
     console.error('MongoDB connection error:', err.message);
-    // Exit if cannot connect to DB on startup
-    process.exit(1);
+    if (process.env.NODE_ENV === 'production') {
+      // Don't crash during build process in CI
+      console.warn('Continuing without DB connection...');
+    } else {
+      process.exit(1);
+    }
   }
 };
 
