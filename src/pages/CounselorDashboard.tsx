@@ -249,7 +249,7 @@ const CounselorDashboard = () => {
                   innerRadius={70}
                   outerRadius={100}
                   paddingAngle={5}
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
                 >
                   {stats.classStats.map((_entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
