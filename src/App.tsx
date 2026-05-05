@@ -43,7 +43,8 @@ function App() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, padding: '20px' }}>
-          <h1 style={{ fontSize: '3rem', marginBottom: '10px', textAlign: 'center', color: 'var(--primary)' }}>منصة الضبط المدرسي</h1>
+          <h1 style={{ fontSize: '3rem', marginBottom: '4px', textAlign: 'center', color: 'var(--primary)' }}>منصة إحالات الطلاب</h1>
+          <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)', margin: '0 0 10px', textAlign: 'center' }}>بمدرسة الأجاويد الأولى المتوسطة</p>
           <p style={{ color: 'var(--text-muted)', marginBottom: '40px' }}>نظام المراسلة والأرشفة المتكامل</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', width: '100%', maxWidth: '900px' }}>
             <RoleCard title="المعلم" icon={GraduationCap} onClick={() => handleRoleSelection('TEACHER')} color="#059669" />
@@ -90,7 +91,11 @@ function App() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <nav style={{ padding: '16px 40px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white' }}>
         <h2 style={{ fontSize: '1.25rem', cursor: 'pointer', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => setRole('NONE')}>
-          <Shield size={24} /> منصة الضبط المدرسي
+          <Shield size={24} />
+          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+            <span>منصة إحالات الطلاب</span>
+            <span style={{ fontSize: '0.65rem', fontWeight: 400, color: 'var(--text-muted)' }}>بمدرسة الأجاويد الأولى المتوسطة</span>
+          </span>
         </h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ textAlign: 'left' }}>

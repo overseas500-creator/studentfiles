@@ -91,7 +91,8 @@ const CounselorDashboard = () => {
           <body>
             <div class="header">
               <h1>سجل انضباط الطالب (تقرير تجميعي)</h1>
-              <p>منصة الضبط المدرسي</p>
+              <p>منصة إحالات الطلاب</p>
+              <p style="font-size: 0.85em; color: #555; margin-top: 4px;">بمدرسة الأجاويد الأولى المتوسطة</p>
             </div>
             
             <div class="student-info">
