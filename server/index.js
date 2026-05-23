@@ -217,7 +217,7 @@ app.post('/api/reports', async (req, res) => {
         const payload = {
           secret: process.env.AJAWID_SECRET || "Ajawid_Secret_2026",
           student_id: student.student_number,
-          message: `تم تسجيل إشعار (${report.violation_type}) من قبل المعلم ${report.teacher_name} في مادة ${report.subject}. التفاصيل: ${report.notes || 'لا يوجد'}`
+          message: `تم تسجيل ملاحظة سلبية على الطالب وهي : "${report.violation_type}" ، من قبل المعلم "${report.teacher_name}" ، المادة : "${report.subject}" ، تفاصيل إضافية : "${report.notes || 'لا يوجد'}"`
         };
         
         fetch(process.env.GAS_WEBAPP_URL, {
