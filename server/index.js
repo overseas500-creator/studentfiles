@@ -209,6 +209,27 @@ app.post('/api/reports', async (req, res) => {
   try {
     const report = new Report(req.body);
     await report.save();
+
+    // إرسال إشعار لحظي إلى سكربت جوجل (رسالة لولي الأمر)
+    try {
+      const student = await Student.findById(report.student_id);
+      if (student && student.student_number && process.env.GAS_WEBAPP_URL) {
+        const payload = {
+          secret: process.env.AJAWID_SECRET || "Ajawid_Secret_2026",
+          student_id: student.student_number,
+          message: `تم تسجيل إشعار (${report.violation_type}) من قبل المعلم ${report.teacher_name} في مادة ${report.subject}. التفاصيل: ${report.notes || 'لا يوجد'}`
+        };
+        
+        fetch(process.env.GAS_WEBAPP_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+            headers: { 'Content-Type': 'application/json' }
+        }).catch(err => console.error("Webhook failed:", err));
+      }
+    } catch (e) {
+      console.error("Error triggering webhook:", e);
+    }
+
     res.json({ ...report._doc, id: report._id });
   } catch (err) {
     res.status(400).json({ error: err.message });
