@@ -11,6 +11,7 @@ const CounselorDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterGrade, setFilterGrade] = useState('الكل');
   const [filterClass, setFilterClass] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchData();
@@ -183,6 +184,39 @@ const CounselorDashboard = () => {
     }
   };
 
+  const handleSelectAll = () => {
+    if (selectedIds.size === filteredReports.length && filteredReports.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredReports.map(r => String(r.id || r._id))));
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    const pass = window.prompt(`يرجى إدخال الرقم السري لمدير النظام لتأكيد حذف ${selectedIds.size} بلاغ:`);
+    if (pass !== '1256') {
+      if (pass !== null) alert('الرقم السري غير صحيح');
+      return;
+    }
+    try {
+      await Promise.all([...selectedIds].map(id => axios.delete(`/api/reports/${id}`)));
+      setSelectedIds(new Set());
+      fetchData();
+    } catch (err) {
+      alert('حدث خطأ أثناء حذف البلاغات المحددة');
+    }
+  };
+
   return (
     <div className="animate-fade">
       {/* Stats Summary */}
@@ -328,10 +362,35 @@ const CounselorDashboard = () => {
       {/* Reports Table */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FileText size={20} color="var(--primary)" />
-            أرشيف البلاغات
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+              <FileText size={20} color="var(--primary)" />
+              أرشيف البلاغات
+            </h3>
+            {selectedIds.size > 0 && (
+              <button
+                onClick={handleDeleteSelected}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  background: 'var(--danger)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                  boxShadow: '0 2px 8px rgba(239,68,68,0.3)',
+                  animation: 'pulse 1.5s infinite'
+                }}
+              >
+                <Trash2 size={15} />
+                حذف المحدد ({selectedIds.size})
+              </button>
+            )}
+          </div>
           
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative' }}>
@@ -378,6 +437,18 @@ const CounselorDashboard = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
             <thead>
               <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                <th style={{ padding: '16px', color: 'var(--text-muted)', width: '48px', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: 'var(--danger)' }}
+                    checked={filteredReports.length > 0 && selectedIds.size === filteredReports.length}
+                    ref={el => {
+                      if (el) el.indeterminate = selectedIds.size > 0 && selectedIds.size < filteredReports.length;
+                    }}
+                    onChange={handleSelectAll}
+                    title="تحديد الكل"
+                  />
+                </th>
                 <th style={{ padding: '16px', color: 'var(--text-muted)' }}>التاريخ</th>
                 <th style={{ padding: '16px', color: 'var(--text-muted)' }}>الطالب</th>
                 <th style={{ padding: '16px', color: 'var(--text-muted)' }}>الصف/الفصل</th>
@@ -387,70 +458,84 @@ const CounselorDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredReports.map((report) => (
-                <tr 
-                  key={report.id} 
-                  style={{ 
-                    borderBottom: '1px solid var(--border)',
-                    backgroundColor: report.status === 'done' ? '#f3f4f6' : 'transparent',
-                    transition: 'background-color 0.3s ease',
-                    opacity: report.status === 'done' ? 0.7 : 1
-                  }}
-                >
-                  <td style={{ padding: '16px', fontSize: '0.9rem' }}>{new Date(report.created_at).toLocaleDateString('ar-SA')}</td>
-                  <td style={{ padding: '16px', fontWeight: 600 }}>{report.student_name}</td>
-                  <td style={{ padding: '16px' }}>{report.grade} - {report.class_name}</td>
-                  <td style={{ padding: '16px' }}>{report.teacher_name}</td>
-                  <td style={{ padding: '16px' }}>
-                    <span style={{ 
-                      padding: '4px 12px', 
-                      borderRadius: '20px', 
-                      background: report.status === 'done' ? 'rgba(107, 114, 128, 0.1)' : 'rgba(239, 68, 68, 0.05)', 
-                      color: report.status === 'done' ? '#6b7280' : 'var(--danger)',
-                      fontSize: '0.8rem',
-                      border: report.status === 'done' ? '1px solid rgba(107, 114, 128, 0.2)' : '1px solid rgba(239, 68, 68, 0.1)',
-                      fontWeight: 600
-                    }}>
-                      {report.violation_type}
-                    </span>
-                  </td>
-                  <td style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button 
-                        onClick={() => handleStatusChange(report.id, report.status)}
-                        className="btn-primary" 
-                        style={{ 
-                          padding: '6px 12px', 
-                          fontSize: '0.8rem', 
-                          background: report.status === 'done' ? '#10b981' : 'white', 
-                          border: report.status === 'done' ? '1px solid #10b981' : '1px solid #10b981', 
-                          color: report.status === 'done' ? 'white' : '#10b981' 
-                        }}
-                      >
-                        {report.status === 'done' ? 'ملغي' : 'تم'}
-                      </button>
-                      <button 
-                        onClick={() => handlePrint(report.student_id)}
-                        className="btn-primary" 
-                        style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'white', border: '1px solid var(--primary)', color: 'var(--primary)' }}
-                      >
-                        <Printer size={14} style={{ marginLeft: '4px' }} /> طباعة أرشيف
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(report.id)}
-                        className="btn-primary" 
-                        style={{ padding: '6px 10px', fontSize: '0.8rem', background: 'white', border: '1px solid var(--danger)', color: 'var(--danger)' }}
-                        title="حذف المخالفة"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filteredReports.map((report) => {
+                const rowId = String(report.id || report._id);
+                const isSelected = selectedIds.has(rowId);
+                return (
+                  <tr 
+                    key={report.id} 
+                    style={{ 
+                      borderBottom: '1px solid var(--border)',
+                      backgroundColor: isSelected
+                        ? 'rgba(239,68,68,0.06)'
+                        : report.status === 'done' ? '#f3f4f6' : 'transparent',
+                      transition: 'background-color 0.2s ease',
+                      opacity: report.status === 'done' && !isSelected ? 0.7 : 1
+                    }}
+                  >
+                    <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        style={{ width: '17px', height: '17px', cursor: 'pointer', accentColor: 'var(--danger)' }}
+                        checked={isSelected}
+                        onChange={() => handleSelectOne(rowId)}
+                      />
+                    </td>
+                    <td style={{ padding: '16px', fontSize: '0.9rem' }}>{new Date(report.created_at).toLocaleDateString('ar-SA')}</td>
+                    <td style={{ padding: '16px', fontWeight: 600 }}>{report.student_name}</td>
+                    <td style={{ padding: '16px' }}>{report.grade} - {report.class_name}</td>
+                    <td style={{ padding: '16px' }}>{report.teacher_name}</td>
+                    <td style={{ padding: '16px' }}>
+                      <span style={{ 
+                        padding: '4px 12px', 
+                        borderRadius: '20px', 
+                        background: report.status === 'done' ? 'rgba(107, 114, 128, 0.1)' : 'rgba(239, 68, 68, 0.05)', 
+                        color: report.status === 'done' ? '#6b7280' : 'var(--danger)',
+                        fontSize: '0.8rem',
+                        border: report.status === 'done' ? '1px solid rgba(107, 114, 128, 0.2)' : '1px solid rgba(239, 68, 68, 0.1)',
+                        fontWeight: 600
+                      }}>
+                        {report.violation_type}
+                      </span>
+                    </td>
+                    <td style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          onClick={() => handleStatusChange(report.id, report.status)}
+                          className="btn-primary" 
+                          style={{ 
+                            padding: '6px 12px', 
+                            fontSize: '0.8rem', 
+                            background: report.status === 'done' ? '#10b981' : 'white', 
+                            border: report.status === 'done' ? '1px solid #10b981' : '1px solid #10b981', 
+                            color: report.status === 'done' ? 'white' : '#10b981' 
+                          }}
+                        >
+                          {report.status === 'done' ? 'ملغي' : 'تم'}
+                        </button>
+                        <button 
+                          onClick={() => handlePrint(report.student_id)}
+                          className="btn-primary" 
+                          style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'white', border: '1px solid var(--primary)', color: 'var(--primary)' }}
+                        >
+                          <Printer size={14} style={{ marginLeft: '4px' }} /> طباعة أرشيف
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(report.id)}
+                          className="btn-primary" 
+                          style={{ padding: '6px 10px', fontSize: '0.8rem', background: 'white', border: '1px solid var(--danger)', color: 'var(--danger)' }}
+                          title="حذف المخالفة"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {filteredReports.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>لا توجد بلاغات تطابق البحث</td>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>لا توجد بلاغات تطابق البحث</td>
                 </tr>
               )}
             </tbody>
