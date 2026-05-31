@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shield, GraduationCap, LayoutDashboard, Lock } from 'lucide-react';
 import AdminDashboard from './pages/AdminDashboard';
 import TeacherView from './pages/TeacherView';
@@ -7,9 +7,19 @@ import CounselorDashboard from './pages/CounselorDashboard';
 type Role = 'ADMIN' | 'TEACHER' | 'COUNSELOR' | 'NONE';
 
 function App() {
-  const [role, setRole] = useState<Role>('NONE');
+  const [role, setRole] = useState<Role>(() => {
+    return (sessionStorage.getItem('app_role') as Role) || 'NONE';
+  });
   const [password, setPassword] = useState('');
   const [showPassModal, setShowPassModal] = useState<Role>('NONE');
+
+  useEffect(() => {
+    if (role === 'NONE') {
+      sessionStorage.removeItem('app_role');
+    } else {
+      sessionStorage.setItem('app_role', role);
+    }
+  }, [role]);
 
   const handleRoleSelection = (selectedRole: Role) => {
     if (selectedRole === 'TEACHER') {
@@ -90,7 +100,7 @@ function App() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <nav style={{ padding: '16px 40px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white' }}>
-        <h2 style={{ fontSize: '1.25rem', cursor: 'pointer', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => setRole('NONE')}>
+        <h2 style={{ fontSize: '1.25rem', cursor: 'pointer', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '10px' }} onClick={() => { setRole('NONE'); sessionStorage.removeItem('app_role'); }}>
           <Shield size={24} />
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
             <span>منصة إحالات الطلاب</span>
@@ -103,7 +113,7 @@ function App() {
             <p style={{ fontWeight: 600, margin: 0, fontSize: '0.9rem' }}>{role === 'ADMIN' ? 'مدير النظام' : role === 'TEACHER' ? 'المعلم' : 'الوكيل/الموجه الطلابي'}</p>
           </div>
           <button 
-            onClick={() => setRole('NONE')}
+            onClick={() => { setRole('NONE'); sessionStorage.removeItem('app_role'); }}
             style={{ padding: '6px 12px', fontSize: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer' }}
           >
             خروج
