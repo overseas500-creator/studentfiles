@@ -1,14 +1,28 @@
 import { useState, useEffect } from 'react';
-import { Send, CheckSquare } from 'lucide-react';
+import { 
+  Send, CheckSquare, Clock, DoorOpen, AlertTriangle, Swords, ShieldAlert,
+  Wrench, Trash2, Moon, Utensils, MessageSquare, TrendingDown,
+  LogOut, BookX, MoreHorizontal, UserX, UserPlus, Award
+} from 'lucide-react';
 import axios from 'axios';
 
 const violations = [
-  "تأخر عن دخول الحصة", "هروب من الحصة", "إثارة الفوضى داخل الفصل", 
-  "الاشتراك في مشاجرة", "الاعتداء على آخر بالضرب أو الألفاظ النابية", 
-  "العبث بممتلكات المدرسة", "إهمال نظافة مكان الجلوس", "النوم داخل الفصل", 
-  "تناول الأكل والمشروبات أثناء الدرس", "الانشغال بالأحاديث الجانبية أثناء الدرس", 
-  "تدني المستوى الدراسي", "دخول الفصل دون استئذان", "الخروج من الفصل دون استئذان", 
-  "عدم إحضار الكتاب الدراسي", "أخرى"
+  { text: "شكر وتقدير", icon: Award, color: "#10b981" },
+  { text: "تأخر عن دخول الحصة", icon: Clock },
+  { text: "هروب من الحصة", icon: UserX },
+  { text: "إثارة الفوضى داخل الفصل", icon: AlertTriangle },
+  { text: "الاشتراك في مشاجرة", icon: Swords },
+  { text: "الاعتداء على آخر بالضرب أو الألفاظ النابية", icon: ShieldAlert },
+  { text: "العبث بممتلكات المدرسة", icon: Wrench },
+  { text: "إهمال نظافة مكان الجلوس", icon: Trash2 },
+  { text: "النوم داخل الفصل", icon: Moon },
+  { text: "تناول الأكل والمشروبات أثناء الدرس", icon: Utensils },
+  { text: "الانشغال بالأحاديث الجانبية أثناء الدرس", icon: MessageSquare },
+  { text: "تدني المستوى الدراسي", icon: TrendingDown },
+  { text: "دخول الفصل دون استئذان", icon: UserPlus },
+  { text: "الخروج من الفصل دون استئذان", icon: LogOut },
+  { text: "عدم إحضار الكتاب الدراسي", icon: BookX },
+  { text: "أخرى", icon: MoreHorizontal }
 ];
 
 const TeacherView = () => {
@@ -219,26 +233,37 @@ const TeacherView = () => {
 
                 <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>نوع المخالفة</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '24px' }}>
-                  {violations.map(v => (
-                    <div 
-                      key={v}
-                      onClick={() => setSelectedViolation(v)}
-                      style={{ 
-                        padding: '10px 12px', 
-                        borderRadius: '8px', 
-                        border: '1px solid var(--border)',
-                        background: selectedViolation === v ? 'var(--primary)' : 'white',
-                        color: selectedViolation === v ? 'white' : 'var(--text-main)',
-                        cursor: 'pointer',
-                        fontSize: '0.8rem',
-                        textAlign: 'center',
-                        transition: 'all 0.2s',
-                        boxShadow: selectedViolation === v ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none'
-                      }}
-                    >
-                      {v}
-                    </div>
-                  ))}
+                  {violations.map(v => {
+                    const Icon = v.icon;
+                    const isSelected = selectedViolation === v.text;
+                    const activeColor = v.color || 'var(--primary)';
+                    
+                    return (
+                      <div 
+                        key={v.text}
+                        onClick={() => setSelectedViolation(v.text)}
+                        style={{ 
+                          padding: '12px', 
+                          borderRadius: '8px', 
+                          border: `1px solid ${isSelected ? activeColor : (v.color ? activeColor + '40' : 'var(--border)')}`,
+                          background: isSelected ? activeColor : 'white',
+                          color: isSelected ? 'white' : (v.color || 'var(--text-main)'),
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          textAlign: 'center',
+                          transition: 'all 0.2s',
+                          boxShadow: isSelected ? `0 4px 12px ${activeColor}40` : 'none',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        <Icon size={24} />
+                        {v.text}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>ملاحظات توضيحية</label>
