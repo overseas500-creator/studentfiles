@@ -107,7 +107,7 @@ const CounselorDashboard = () => {
               </div>
             </div>
 
-            <p class="summary">إجمالي عدد المخالفات المسجلة: ${sortedReports.length}</p>
+            <p class="summary">إجمالي عدد الحالات المسجلة: ${sortedReports.length}</p>
 
             <table>
               <thead>
@@ -115,7 +115,7 @@ const CounselorDashboard = () => {
                   <th style="width: 15%">التاريخ</th>
                   <th style="width: 20%">المعلم</th>
                   <th style="width: 15%">المادة</th>
-                  <th style="width: 25%">المخالفة</th>
+                  <th style="width: 25%">الحالة</th>
                   <th style="width: 25%">ملاحظات</th>
                 </tr>
               </thead>
@@ -226,7 +226,7 @@ const CounselorDashboard = () => {
             <FileText size={24} />
           </div>
           <div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>إجمالي المخالفات</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>إجمالي الحالات</p>
             <h2 style={{ fontSize: '1.8rem', margin: 0 }}>{reports.length}</h2>
           </div>
         </div>
@@ -235,7 +235,7 @@ const CounselorDashboard = () => {
             <TrendingUp size={24} />
           </div>
           <div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>المخالفة الأكثر تكراراً</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>الحالة الأكثر تكراراً</p>
             <h2 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 700 }}>{stats.violationStats[0]?.violation_type || 'لا يوجد'}</h2>
           </div>
         </div>
@@ -246,7 +246,7 @@ const CounselorDashboard = () => {
         <div className="glass-card" style={{ minHeight: '450px', display: 'flex', flexDirection: 'column' }}>
           <h3 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <BarChart3 size={20} color="var(--primary)" />
-            المشكلات المتكررة
+            الحالات المتكررة
           </h3>
           <div style={{ flex: 1, minHeight: '300px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -453,7 +453,7 @@ const CounselorDashboard = () => {
                 <th style={{ padding: '16px', color: 'var(--text-muted)' }}>الطالب</th>
                 <th style={{ padding: '16px', color: 'var(--text-muted)' }}>الصف/الفصل</th>
                 <th style={{ padding: '16px', color: 'var(--text-muted)' }}>المعلم</th>
-                <th style={{ padding: '16px', color: 'var(--text-muted)' }}>المخالفة</th>
+                <th style={{ padding: '16px', color: 'var(--text-muted)' }}>الحالة</th>
                 <th style={{ padding: '16px', color: 'var(--text-muted)' }}>الإجراء</th>
               </tr>
             </thead>
@@ -524,7 +524,7 @@ const CounselorDashboard = () => {
                           onClick={() => handleDelete(report.id)}
                           className="btn-primary" 
                           style={{ padding: '6px 10px', fontSize: '0.8rem', background: 'white', border: '1px solid var(--danger)', color: 'var(--danger)' }}
-                          title="حذف المخالفة"
+                          title="حذف الحالة"
                         >
                           <Trash2 size={14} />
                         </button>

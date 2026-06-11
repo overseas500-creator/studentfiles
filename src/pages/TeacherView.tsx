@@ -213,11 +213,11 @@ const TeacherView = () => {
             {/* Report Column */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div className="glass-card">
-                <h3 style={{ marginBottom: '24px', borderBottom: '2px solid var(--primary)', paddingBottom: '10px', display: 'inline-block' }}>تفاصيل المخالفة</h3>
+                <h3 style={{ marginBottom: '24px', borderBottom: '2px solid var(--primary)', paddingBottom: '10px', display: 'inline-block' }}>تفاصيل الحالة</h3>
                 
                 {/* Manual teacher info inputs removed as per request */}
 
-                <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>نوع المخالفة</label>
+                <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>نوع الحالة</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '24px' }}>
                   {violations.map(v => {
                   {violations.map(v => {
