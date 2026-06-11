@@ -1,28 +1,14 @@
 import { useState, useEffect } from 'react';
-import { 
-  Send, CheckSquare, Clock, DoorOpen, AlertTriangle, Swords, ShieldAlert,
-  Wrench, Trash2, Moon, Utensils, MessageSquare, TrendingDown,
-  LogOut, BookX, MoreHorizontal, UserX, UserPlus, Award
-} from 'lucide-react';
+import { Send, CheckSquare, Award } from 'lucide-react';
 import axios from 'axios';
 
 const violations = [
-  { text: "شكر وتقدير", icon: Award, color: "#10b981" },
-  { text: "تأخر عن دخول الحصة", icon: Clock },
-  { text: "هروب من الحصة", icon: UserX },
-  { text: "إثارة الفوضى داخل الفصل", icon: AlertTriangle },
-  { text: "الاشتراك في مشاجرة", icon: Swords },
-  { text: "الاعتداء على آخر بالضرب أو الألفاظ النابية", icon: ShieldAlert },
-  { text: "العبث بممتلكات المدرسة", icon: Wrench },
-  { text: "إهمال نظافة مكان الجلوس", icon: Trash2 },
-  { text: "النوم داخل الفصل", icon: Moon },
-  { text: "تناول الأكل والمشروبات أثناء الدرس", icon: Utensils },
-  { text: "الانشغال بالأحاديث الجانبية أثناء الدرس", icon: MessageSquare },
-  { text: "تدني المستوى الدراسي", icon: TrendingDown },
-  { text: "دخول الفصل دون استئذان", icon: UserPlus },
-  { text: "الخروج من الفصل دون استئذان", icon: LogOut },
-  { text: "عدم إحضار الكتاب الدراسي", icon: BookX },
-  { text: "أخرى", icon: MoreHorizontal }
+  "شكر وتقدير", "تأخر عن دخول الحصة", "هروب من الحصة", "إثارة الفوضى داخل الفصل", 
+  "الاشتراك في مشاجرة", "الاعتداء على آخر بالضرب أو الألفاظ النابية", 
+  "العبث بممتلكات المدرسة", "إهمال نظافة مكان الجلوس", "النوم داخل الفصل", 
+  "تناول الأكل والمشروبات أثناء الدرس", "الانشغال بالأحاديث الجانبية أثناء الدرس", 
+  "تدني المستوى الدراسي", "دخول الفصل دون استئذان", "الخروج من الفصل دون استئذان", 
+  "عدم إحضار الكتاب الدراسي", "أخرى"
 ];
 
 const TeacherView = () => {
@@ -234,33 +220,32 @@ const TeacherView = () => {
                 <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>نوع المخالفة</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '24px' }}>
                   {violations.map(v => {
-                    const Icon = v.icon;
-                    const isSelected = selectedViolation === v.text;
-                    const activeColor = v.color || 'var(--primary)';
+                    const isPositive = v === 'شكر وتقدير';
+                    const isSelected = selectedViolation === v;
                     
                     return (
                       <div 
-                        key={v.text}
-                        onClick={() => setSelectedViolation(v.text)}
+                        key={v}
+                        onClick={() => setSelectedViolation(v)}
                         style={{ 
-                          padding: '12px', 
+                          padding: '10px 12px', 
                           borderRadius: '8px', 
-                          border: `1px solid ${isSelected ? activeColor : (v.color ? activeColor + '40' : 'var(--border)')}`,
-                          background: isSelected ? activeColor : 'white',
-                          color: isSelected ? 'white' : (v.color || 'var(--text-main)'),
+                          border: `1px solid ${isPositive ? (isSelected ? '#10b981' : '#a7f3d0') : 'var(--border)'}`,
+                          background: isSelected ? (isPositive ? '#10b981' : 'var(--primary)') : (isPositive ? '#ecfdf5' : 'white'),
+                          color: isSelected ? 'white' : (isPositive ? '#059669' : 'var(--text-main)'),
                           cursor: 'pointer',
-                          fontSize: '0.85rem',
+                          fontSize: '0.8rem',
                           textAlign: 'center',
                           transition: 'all 0.2s',
-                          boxShadow: isSelected ? `0 4px 12px ${activeColor}40` : 'none',
+                          boxShadow: isSelected ? `0 4px 12px ${isPositive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(37, 99, 235, 0.2)'}` : 'none',
                           display: 'flex',
-                          flexDirection: 'column',
                           alignItems: 'center',
-                          gap: '8px'
+                          justifyContent: 'center',
+                          gap: '6px'
                         }}
                       >
-                        <Icon size={24} />
-                        {v.text}
+                        {isPositive && <Award size={16} />}
+                        {v}
                       </div>
                     );
                   })}
