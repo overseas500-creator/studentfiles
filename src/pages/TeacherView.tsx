@@ -3,7 +3,7 @@ import { Send, CheckSquare, Award } from 'lucide-react';
 import axios from 'axios';
 
 const violations = [
-  "شكر وتقدير", "تأخر عن دخول الحصة", "هروب من الحصة", "إثارة الفوضى داخل الفصل", 
+  "تأخر عن دخول الحصة", "هروب من الحصة", "إثارة الفوضى داخل الفصل", 
   "الاشتراك في مشاجرة", "الاعتداء على آخر بالضرب أو الألفاظ النابية", 
   "العبث بممتلكات المدرسة", "إهمال نظافة مكان الجلوس", "النوم داخل الفصل", 
   "تناول الأكل والمشروبات أثناء الدرس", "الانشغال بالأحاديث الجانبية أثناء الدرس", 
@@ -220,7 +220,7 @@ const TeacherView = () => {
                 <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>نوع المخالفة</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '24px' }}>
                   {violations.map(v => {
-                    const isPositive = v === 'شكر وتقدير';
+                  {violations.map(v => {
                     const isSelected = selectedViolation === v;
                     
                     return (
@@ -230,25 +230,51 @@ const TeacherView = () => {
                         style={{ 
                           padding: '10px 12px', 
                           borderRadius: '8px', 
-                          border: `1px solid ${isPositive ? (isSelected ? '#10b981' : '#a7f3d0') : 'var(--border)'}`,
-                          background: isSelected ? (isPositive ? '#10b981' : 'var(--primary)') : (isPositive ? '#ecfdf5' : 'white'),
-                          color: isSelected ? 'white' : (isPositive ? '#059669' : 'var(--text-main)'),
+                          border: '1px solid var(--border)',
+                          background: isSelected ? 'var(--primary)' : 'white',
+                          color: isSelected ? 'white' : 'var(--text-main)',
                           cursor: 'pointer',
                           fontSize: '0.8rem',
                           textAlign: 'center',
                           transition: 'all 0.2s',
-                          boxShadow: isSelected ? `0 4px 12px ${isPositive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(37, 99, 235, 0.2)'}` : 'none',
+                          boxShadow: isSelected ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '6px'
                         }}
                       >
-                        {isPositive && <Award size={16} />}
                         {v}
                       </div>
                     );
                   })}
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>إيجابيات</label>
+                  <div 
+                    onClick={() => setSelectedViolation('شكر وتقدير')}
+                    style={{ 
+                      padding: '12px', 
+                      borderRadius: '8px', 
+                      border: `1px solid ${selectedViolation === 'شكر وتقدير' ? '#10b981' : '#a7f3d0'}`,
+                      background: selectedViolation === 'شكر وتقدير' ? '#10b981' : '#ecfdf5',
+                      color: selectedViolation === 'شكر وتقدير' ? 'white' : '#059669',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 500,
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                      boxShadow: selectedViolation === 'شكر وتقدير' ? '0 4px 12px rgba(16, 185, 129, 0.2)' : 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <Award size={18} />
+                    شكر وتقدير
+                  </div>
                 </div>
 
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>ملاحظات توضيحية</label>
