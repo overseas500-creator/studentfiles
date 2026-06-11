@@ -220,7 +220,6 @@ const TeacherView = () => {
                 <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>نوع الحالة</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '24px' }}>
                   {violations.map(v => {
-                  {violations.map(v => {
                     const isSelected = selectedViolation === v;
                     
                     return (
