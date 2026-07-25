@@ -2,13 +2,37 @@ import { useState, useEffect } from 'react';
 import { Send, CheckSquare, Award } from 'lucide-react';
 import axios from 'axios';
 
-const violations = [
-  "تأخر عن دخول الحصة", "هروب من الحصة", "إثارة الفوضى داخل الفصل", 
-  "الاشتراك في مشاجرة", "الاعتداء على آخر بالضرب أو الألفاظ النابية", 
-  "العبث بممتلكات المدرسة", "إهمال نظافة مكان الجلوس", "النوم داخل الفصل", 
-  "تناول الأكل والمشروبات أثناء الدرس", "الانشغال بالأحاديث الجانبية أثناء الدرس", 
-  "تدني المستوى الدراسي", "دخول الفصل دون استئذان", "الخروج من الفصل دون استئذان", 
-  "عدم إحضار الكتاب الدراسي", "أخرى"
+const behavioralViolations = [
+  "التأخر عن دخول الحصة",
+  "هروب من الحصة",
+  "إثارة الفوضى داخل الفصل",
+  "الاشتراك في مشاجرة",
+  "الاعتداء على آخر بالضرب",
+  "الاعتداء على آخر بالألفاظ النابية",
+  "العبث بممتلكات المدرسة",
+  "التنمر على آخر",
+  "أخذ أدوات الغير دون استئذان",
+  "أخذ أدوات الغير دون علمهم",
+  "إهمال نظافة مكان الجلوس",
+  "النوم داخل الفصل",
+  "تناول الأكل والمشروبات أثناء الدرس",
+  "الانشغال بالأحاديث الجانبية أثناء الدرس",
+  "دخول الفصل دون استئذان",
+  "الخروج من الفصل دون استئذان"
+];
+
+const academicViolations = [
+  "عدم دخول الطالب على منصة مدرستي",
+  "عدم تنفيذ المهام و الواجبات في منصة مدرستي",
+  "عدم حل الواجبات في الكتاب المدرسي",
+  "عدم تنفيذ المهام",
+  "عدم إحضار اللبس الرياضي",
+  "عدم التقيد بالزي الرسمي",
+  "عدم إحضار أدوات التربية الفنية",
+  "تدني المستوى الدراسي",
+  "عدم حضور الاختبار القصير للمادة",
+  "تكرار الغياب عن الحصة الدراسية",
+  "عدم إحضار الكتاب الدراسي"
 ];
 
 const TeacherView = () => {
@@ -217,40 +241,74 @@ const TeacherView = () => {
                 
                 {/* Manual teacher info inputs removed as per request */}
 
-                <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>نوع الحالة</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '24px' }}>
-                  {violations.map(v => {
-                    const isSelected = selectedViolation === v;
-                    
-                    return (
-                      <div 
-                        key={v}
-                        onClick={() => setSelectedViolation(v)}
-                        style={{ 
-                          padding: '10px 12px', 
-                          borderRadius: '8px', 
-                          border: '1px solid var(--border)',
-                          background: isSelected ? 'var(--primary)' : 'white',
-                          color: isSelected ? 'white' : 'var(--text-main)',
-                          cursor: 'pointer',
-                          fontSize: '0.8rem',
-                          textAlign: 'center',
-                          transition: 'all 0.2s',
-                          boxShadow: isSelected ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px'
-                        }}
-                      >
-                        {v}
-                      </div>
-                    );
-                  })}
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ display: 'block', marginBottom: '16px', fontSize: '1rem', fontWeight: 600, color: 'var(--text-main)', borderBottom: '2px solid var(--border)', paddingBottom: '8px' }}>مخالفات سلوكية</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+                    {behavioralViolations.map(v => {
+                      const isSelected = selectedViolation === v;
+                      return (
+                        <div 
+                          key={v}
+                          onClick={() => setSelectedViolation(v)}
+                          style={{ 
+                            padding: '10px 12px', 
+                            borderRadius: '8px', 
+                            border: '1px solid var(--border)',
+                            background: isSelected ? 'var(--primary)' : 'white',
+                            color: isSelected ? 'white' : 'var(--text-main)',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            textAlign: 'center',
+                            transition: 'all 0.2s',
+                            boxShadow: isSelected ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          {v}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>إيجابيات</label>
+                  <label style={{ display: 'block', marginBottom: '16px', fontSize: '1rem', fontWeight: 600, color: 'var(--text-main)', borderBottom: '2px solid var(--border)', paddingBottom: '8px' }}>مخالفات دراسية</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+                    {academicViolations.map(v => {
+                      const isSelected = selectedViolation === v;
+                      return (
+                        <div 
+                          key={v}
+                          onClick={() => setSelectedViolation(v)}
+                          style={{ 
+                            padding: '10px 12px', 
+                            borderRadius: '8px', 
+                            border: '1px solid var(--border)',
+                            background: isSelected ? 'var(--primary)' : 'white',
+                            color: isSelected ? 'white' : 'var(--text-main)',
+                            cursor: 'pointer',
+                            fontSize: '0.8rem',
+                            textAlign: 'center',
+                            transition: 'all 0.2s',
+                            boxShadow: isSelected ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          {v}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ display: 'block', marginBottom: '16px', fontSize: '1rem', fontWeight: 600, color: 'var(--text-main)', borderBottom: '2px solid var(--border)', paddingBottom: '8px' }}>إيجابيات</label>
                   <div 
                     onClick={() => setSelectedViolation('شكر وتقدير')}
                     style={{ 
@@ -276,15 +334,43 @@ const TeacherView = () => {
                   </div>
                 </div>
 
-                <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>ملاحظات توضيحية</label>
-                <textarea 
-                  className="input-field" 
-                  rows={4} 
-                  style={{ resize: 'none' }}
-                  value={reportData.notes}
-                  onChange={(e) => setReportData({...reportData, notes: e.target.value})}
-                  placeholder="اكتب تفاصيل إضافية هنا..."
-                ></textarea>
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{ display: 'block', marginBottom: '16px', fontSize: '1rem', fontWeight: 600, color: 'var(--text-main)', borderBottom: '2px solid var(--border)', paddingBottom: '8px' }}>أخرى</label>
+                  
+                  <div style={{ marginBottom: '16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+                    <div 
+                      onClick={() => setSelectedViolation('أخرى')}
+                      style={{ 
+                        padding: '10px 12px', 
+                        borderRadius: '8px', 
+                        border: '1px solid var(--border)',
+                        background: selectedViolation === 'أخرى' ? 'var(--primary)' : 'white',
+                        color: selectedViolation === 'أخرى' ? 'white' : 'var(--text-main)',
+                        cursor: 'pointer',
+                        fontSize: '0.8rem',
+                        textAlign: 'center',
+                        transition: 'all 0.2s',
+                        boxShadow: selectedViolation === 'أخرى' ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      أخرى
+                    </div>
+                  </div>
+
+                  <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>ملاحظات توضيحية</label>
+                  <textarea 
+                    className="input-field" 
+                    rows={4} 
+                    style={{ resize: 'none' }}
+                    value={reportData.notes}
+                    onChange={(e) => setReportData({...reportData, notes: e.target.value})}
+                    placeholder="اكتب تفاصيل إضافية هنا..."
+                  ></textarea>
+                </div>
 
                 <button 
                   className="btn-primary" 
