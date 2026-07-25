@@ -5,12 +5,48 @@ import axios from 'axios';
 
 const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
+const behavioralViolations = [
+  "التأخر عن دخول الحصة",
+  "هروب من الحصة",
+  "إثارة الفوضى داخل الفصل",
+  "الاشتراك في مشاجرة",
+  "الاعتداء على آخر بالضرب",
+  "الاعتداء على آخر بالألفاظ النابية",
+  "العبث بممتلكات المدرسة",
+  "التنمر على آخر",
+  "أخذ أدوات الغير دون استئذان",
+  "أخذ أدوات الغير دون علمهم",
+  "إهمال نظافة مكان الجلوس",
+  "النوم داخل الفصل",
+  "تناول الأكل والمشروبات أثناء الدرس",
+  "الانشغال بالأحاديث الجانبية أثناء الدرس",
+  "دخول الفصل دون استئذان",
+  "الخروج من الفصل دون استئذان",
+  // Backward compatibility with older reports
+  "تأخر عن دخول الحصة", "الاعتداء على آخر بالضرب أو الألفاظ النابية"
+];
+
+const academicViolations = [
+  "عدم دخول الطالب على منصة مدرستي",
+  "عدم تنفيذ المهام و الواجبات في منصة مدرستي",
+  "عدم حل الواجبات في الكتاب المدرسي",
+  "عدم تنفيذ المهام",
+  "عدم إحضار اللبس الرياضي",
+  "عدم التقيد بالزي الرسمي",
+  "عدم إحضار أدوات التربية الفنية",
+  "تدني المستوى الدراسي",
+  "عدم حضور الاختبار القصير للمادة",
+  "تكرار الغياب عن الحصة الدراسية",
+  "عدم إحضار الكتاب الدراسي"
+];
+
 const CounselorDashboard = () => {
   const [reports, setReports] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({ violationStats: [], classStats: [], gradeStats: [] });
   const [searchQuery, setSearchQuery] = useState('');
   const [filterGrade, setFilterGrade] = useState('الكل');
   const [filterClass, setFilterClass] = useState('');
+  const [filterCategory, setFilterCategory] = useState('الكل');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -34,7 +70,23 @@ const CounselorDashboard = () => {
     const matchesSearch = r.student_name.includes(searchQuery) || (r.student_number && r.student_number.includes(searchQuery));
     const matchesGrade = filterGrade === 'الكل' || r.grade === filterGrade;
     const matchesClass = !filterClass || r.class_name.includes(filterClass);
-    return matchesSearch && matchesGrade && matchesClass;
+    
+    let matchesCategory = true;
+    if (filterCategory !== 'الكل') {
+      if (filterCategory === 'المشكلات السلوكية') {
+        matchesCategory = behavioralViolations.includes(r.violation_type);
+      } else if (filterCategory === 'المشكلات الدراسية') {
+        matchesCategory = academicViolations.includes(r.violation_type);
+      } else if (filterCategory === 'الشكر والتقدير') {
+        matchesCategory = r.violation_type === 'شكر وتقدير';
+      } else if (filterCategory === 'أخرى') {
+        matchesCategory = !behavioralViolations.includes(r.violation_type) && 
+                          !academicViolations.includes(r.violation_type) && 
+                          r.violation_type !== 'شكر وتقدير';
+      }
+    }
+
+    return matchesSearch && matchesGrade && matchesClass && matchesCategory;
   });
 
   const handlePrint = (student: any) => {
@@ -403,6 +455,20 @@ const CounselorDashboard = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            
+            <select 
+              className="input-field" 
+              style={{ width: '140px', padding: '10px' }}
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+            >
+              <option value="الكل">جميع التصنيفات</option>
+              <option value="المشكلات السلوكية">المشكلات السلوكية</option>
+              <option value="المشكلات الدراسية">المشكلات الدراسية</option>
+              <option value="الشكر والتقدير">الشكر والتقدير</option>
+              <option value="أخرى">أخرى</option>
+            </select>
+
             <select 
               className="input-field" 
               style={{ width: '140px', padding: '10px' }}
