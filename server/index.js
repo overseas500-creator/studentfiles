@@ -110,13 +110,32 @@ app.post('/api/students', async (req, res) => {
 app.post('/api/students/bulk', async (req, res) => {
   try {
     const students = req.body;
-    const result = await Student.insertMany(students, { ordered: false });
-    res.json({ success: true, count: result.length });
-  } catch (err) {
-    const insertedCount = err.insertedDocs ? err.insertedDocs.length : 0;
-    if (insertedCount > 0) {
-      return res.json({ success: true, count: insertedCount });
+    const incomingNumbers = students.map(s => s.student_number);
+    const existingStudents = await Student.find({ student_number: { $in: incomingNumbers } }, 'student_number');
+    const existingNumbers = new Set(existingStudents.map(s => s.student_number));
+    
+    const newStudents = students.filter(s => !existingNumbers.has(s.student_number));
+    
+    if (newStudents.length > 0) {
+      await Student.insertMany(newStudents);
     }
+    
+    res.json({ success: true, count: newStudents.length, ignored: students.length - newStudents.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/students/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ error: 'ids array is required' });
+    }
+    await Student.deleteMany({ _id: { $in: ids } });
+    await Report.deleteMany({ student_id: { $in: ids } });
+    res.json({ success: true, count: ids.length });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
@@ -134,13 +153,31 @@ app.get('/api/teachers', async (req, res) => {
 app.post('/api/teachers/bulk', async (req, res) => {
   try {
     const teachers = req.body;
-    const result = await Teacher.insertMany(teachers, { ordered: false });
-    res.json({ success: true, count: result.length });
-  } catch (err) {
-    const insertedCount = err.insertedDocs ? err.insertedDocs.length : 0;
-    if (insertedCount > 0) {
-      return res.json({ success: true, count: insertedCount });
+    const incomingIds = teachers.map(t => t.national_id);
+    const existingTeachers = await Teacher.find({ national_id: { $in: incomingIds } }, 'national_id');
+    const existingIds = new Set(existingTeachers.map(t => t.national_id));
+    
+    const newTeachers = teachers.filter(t => !existingIds.has(t.national_id));
+    
+    if (newTeachers.length > 0) {
+      await Teacher.insertMany(newTeachers);
     }
+    
+    res.json({ success: true, count: newTeachers.length, ignored: teachers.length - newTeachers.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/teachers/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ error: 'ids array is required' });
+    }
+    await Teacher.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, count: ids.length });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

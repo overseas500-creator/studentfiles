@@ -7,6 +7,8 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<'students' | 'teachers'>('students');
   const [students, setStudents] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [selectedTeachers, setSelectedTeachers] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     name: '',
     grade: '',
@@ -88,6 +90,32 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (activeTab === 'students') {
+      if (selectedStudents.length === 0) return;
+      if (window.confirm(`هل أنت متأكد من حذف ${selectedStudents.length} طالب؟ سيتم حذف جميع تقاريرهم أيضاً.`)) {
+        try {
+          await axios.post('/api/students/bulk-delete', { ids: selectedStudents });
+          setSelectedStudents([]);
+          fetchStudents();
+        } catch (err) {
+          alert('خطأ في حذف الطلاب');
+        }
+      }
+    } else {
+      if (selectedTeachers.length === 0) return;
+      if (window.confirm(`هل أنت متأكد من حذف ${selectedTeachers.length} معلم؟`)) {
+        try {
+          await axios.post('/api/teachers/bulk-delete', { ids: selectedTeachers });
+          setSelectedTeachers([]);
+          fetchTeachers();
+        } catch (err) {
+          alert('خطأ في حذف المعلمين');
+        }
+      }
+    }
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'students' | 'teachers') => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -116,8 +144,9 @@ const AdminDashboard = () => {
             return;
           }
 
-          await axios.post('/api/students/bulk', formattedStudents);
-          alert(`تم استيراد ${formattedStudents.length} طالب بنجاح`);
+          const res = await axios.post('/api/students/bulk', formattedStudents);
+          const { count, ignored } = res.data;
+          alert(`تم استيراد ${count} طالب جديد بنجاح. ${ignored ? `وتم تجاهل ${ignored} طالب موجود مسبقاً.` : ''}`);
           fetchStudents();
         } else {
           const formattedTeachers = data.map((row: any) => ({
@@ -131,8 +160,9 @@ const AdminDashboard = () => {
             return;
           }
 
-          await axios.post('/api/teachers/bulk', formattedTeachers);
-          alert(`تم استيراد ${formattedTeachers.length} معلم بنجاح`);
+          const res = await axios.post('/api/teachers/bulk', formattedTeachers);
+          const { count, ignored } = res.data;
+          alert(`تم استيراد ${count} معلم جديد بنجاح. ${ignored ? `وتم تجاهل ${ignored} معلم موجود مسبقاً.` : ''}`);
           fetchTeachers();
         }
       } catch (err: any) {
@@ -332,13 +362,26 @@ const AdminDashboard = () => {
             <Users size={20} color="var(--primary)" />
             {activeTab === 'students' ? `قائمة الطلاب (${students.length})` : `قائمة المعلمين (${teachers.length})`}
           </h3>
-          <div style={{ position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input 
-              className="input-field" 
-              placeholder={activeTab === 'students' ? "بحث في الطلاب..." : "بحث في المعلمين..."}
-              style={{ paddingRight: '36px', width: '250px', padding: '10px 36px 10px 12px' }} 
-            />
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            {((activeTab === 'students' && selectedStudents.length > 0) || (activeTab === 'teachers' && selectedTeachers.length > 0)) && (
+              <button 
+                onClick={handleBulkDelete}
+                style={{ 
+                  background: 'var(--danger)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600
+                }}
+              >
+                <Trash2 size={16} />
+                حذف المحدد ({activeTab === 'students' ? selectedStudents.length : selectedTeachers.length})
+              </button>
+            )}
+            <div style={{ position: 'relative' }}>
+              <Search size={16} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                className="input-field" 
+                placeholder={activeTab === 'students' ? "بحث في الطلاب..." : "بحث في المعلمين..."}
+                style={{ paddingRight: '36px', width: '250px', padding: '10px 36px 10px 12px' }} 
+              />
+            </div>
           </div>
         </div>
         <div style={{ overflowX: 'auto' }}>
@@ -346,6 +389,16 @@ const AdminDashboard = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ padding: '12px', width: '40px' }}>
+                    <input 
+                      type="checkbox" 
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedStudents(students.map(s => s.id || s._id));
+                        else setSelectedStudents([]);
+                      }}
+                      checked={students.length > 0 && selectedStudents.length === students.length}
+                    />
+                  </th>
                   <th style={{ padding: '12px', color: 'var(--text-muted)' }}>الاسم</th>
                   <th style={{ padding: '12px', color: 'var(--text-muted)' }}>الصف/الفصل</th>
                   <th style={{ padding: '12px', color: 'var(--text-muted)' }}>رقم الطالب</th>
@@ -356,6 +409,16 @@ const AdminDashboard = () => {
               <tbody>
                 {students.map((student) => (
                   <tr key={student.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '12px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedStudents.includes(student.id || student._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedStudents([...selectedStudents, student.id || student._id]);
+                          else setSelectedStudents(selectedStudents.filter(id => id !== (student.id || student._id)));
+                        }}
+                      />
+                    </td>
                     <td style={{ padding: '12px', fontWeight: 600 }}>{student.name}</td>
                     <td style={{ padding: '12px' }}>{student.grade} - {student.class_name}</td>
                     <td style={{ padding: '12px' }}>{student.student_number}</td>
@@ -373,6 +436,16 @@ const AdminDashboard = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                  <th style={{ padding: '12px', width: '40px' }}>
+                    <input 
+                      type="checkbox" 
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedTeachers(teachers.map(t => t.id || t._id));
+                        else setSelectedTeachers([]);
+                      }}
+                      checked={teachers.length > 0 && selectedTeachers.length === teachers.length}
+                    />
+                  </th>
                   <th style={{ padding: '12px', color: 'var(--text-muted)' }}>الاسم</th>
                   <th style={{ padding: '12px', color: 'var(--text-muted)' }}>رقم الهوية</th>
                   <th style={{ padding: '12px', color: 'var(--text-muted)' }}>المادة</th>
@@ -382,6 +455,16 @@ const AdminDashboard = () => {
               <tbody>
                 {teachers.map((teacher) => (
                   <tr key={teacher.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '12px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedTeachers.includes(teacher.id || teacher._id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedTeachers([...selectedTeachers, teacher.id || teacher._id]);
+                          else setSelectedTeachers(selectedTeachers.filter(id => id !== (teacher.id || teacher._id)));
+                        }}
+                      />
+                    </td>
                     <td style={{ padding: '12px', fontWeight: 600 }}>{teacher.name}</td>
                     <td style={{ padding: '12px' }}>{teacher.national_id}</td>
                     <td style={{ padding: '12px' }}>{teacher.subject}</td>
