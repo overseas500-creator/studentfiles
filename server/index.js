@@ -250,14 +250,16 @@ app.post('/api/reports', async (req, res) => {
     // إرسال إشعار لحظي إلى سكربت جوجل (رسالة لولي الأمر)
     try {
       const student = await Student.findById(report.student_id);
-      if (student && student.student_number && process.env.GAS_WEBAPP_URL) {
+      const webhookUrl = process.env.GAS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbyW-JlnwtXe8Dq5mjngTADQbwFDOorTuB8_R4HfUQO7VTI01TEBnn_AJ03pw4k4987D/exec";
+      
+      if (student && student.student_number && webhookUrl) {
         const payload = {
           secret: process.env.AJAWID_SECRET || "Ajawid_Secret_2026",
           student_id: student.student_number,
           message: `إشعار إلى ولي أمر الطالب ، من المعلم : "${report.teacher_name}" ، المادة "${report.subject}" ، الإشعار : **"${report.violation_type}"** ، التفاصيل : "${report.notes || 'لا يوجد'}"`
         };
         
-        fetch(process.env.GAS_WEBAPP_URL, {
+        fetch(webhookUrl, {
             method: 'POST',
             body: JSON.stringify(payload),
             headers: { 'Content-Type': 'application/json' }
