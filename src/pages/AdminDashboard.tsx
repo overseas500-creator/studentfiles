@@ -136,7 +136,7 @@ const AdminDashboard = () => {
             grade: (row['الصف'] || 'الأول الثانوي').trim(),
             class_name: (row['الفصل'] || '').trim(),
             phone: (row['رقم الجوال'] || row['الجوال'] || '').trim(),
-            student_number: String(row['رقم الطالب'] || row['الهوية'] || '').trim()
+            student_number: String(row['رقم الطالب'] || row['الهوية'] || '').trim().padStart(10, '0')
           })).filter(s => s.name && s.student_number);
 
           if (formattedStudents.length === 0) {

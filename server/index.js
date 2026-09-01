@@ -253,13 +253,17 @@ app.post('/api/reports', async (req, res) => {
       const webhookUrl = process.env.GAS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbyW-JlnwtXe8Dq5mjngTADQbwFDOorTuB8_R4HfUQO7VTI01TEBnn_AJ03pw4k4987D/exec";
       
       if (student && student.student_number && webhookUrl) {
+        // Ensure student_id is properly zero-padded to 10 digits
+        const paddedStudentId = String(student.student_number).padStart(10, '0');
+
         const payload = {
           secret: process.env.AJAWID_SECRET || "Ajawid_Secret_2026",
-          student_id: student.student_number,
+          student_id: paddedStudentId,
           message: `إشعار إلى ولي أمر الطالب ، من المعلم : "${report.teacher_name}" ، المادة "${report.subject}" ، الإشعار : **"${report.violation_type}"** ، التفاصيل : "${report.notes || 'لا يوجد'}"`
         };
         
-        fetch(webhookUrl, {
+        // Await the fetch so Netlify lambda doesn't kill it prematurely
+        await fetch(webhookUrl, {
             method: 'POST',
             body: JSON.stringify(payload),
             headers: { 'Content-Type': 'application/json' }
