@@ -1,4 +1,5 @@
 import express from 'express';
+import axios from 'axios';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
@@ -262,12 +263,10 @@ app.post('/api/reports', async (req, res) => {
           message: `إشعار إلى ولي أمر الطالب ، من المعلم : "${report.teacher_name}" ، المادة "${report.subject}" ، الإشعار : **"${report.violation_type}"** ، التفاصيل : "${report.notes || 'لا يوجد'}"`
         };
         
-        // Await the fetch so Netlify lambda doesn't kill it prematurely
-        await fetch(webhookUrl, {
-            method: 'POST',
-            body: JSON.stringify(payload),
+        // Await the axios call so Netlify lambda doesn't kill it prematurely
+        await axios.post(webhookUrl, payload, {
             headers: { 'Content-Type': 'application/json' }
-        }).catch(err => console.error("Webhook failed:", err));
+        }).catch(err => console.error("Webhook failed:", err.message));
       }
     } catch (e) {
       console.error("Error triggering webhook:", e);
