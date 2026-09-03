@@ -251,7 +251,7 @@ app.post('/api/reports', async (req, res) => {
     // إرسال إشعار لحظي إلى سكربت جوجل (رسالة لولي الأمر)
     try {
       const student = await Student.findById(report.student_id);
-      const webhookUrl = process.env.GAS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbyW-JlnwtXe8Dq5mjngTADQbwFDOorTuB8_R4HfUQO7VTI01TEBnn_AJ03pw4k4987D/exec";
+      const webhookUrl = process.env.GAS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbw1ntn0dUbpGZlg2bVyRddbihjQ4tK1W51FS95p4KtOXEYufzEMKEk_KgU8SuAQbx-WNg/exec";
       
       if (student && student.student_number && webhookUrl) {
         // Ensure student_id is properly zero-padded to 10 digits

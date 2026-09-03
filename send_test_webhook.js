@@ -1,4 +1,4 @@
-const url = 'https://script.google.com/macros/s/AKfycbyW-JlnwtXe8Dq5mjngTADQbwFDOorTuB8_R4HfUQO7VTI01TEBnn_AJ03pw4k4987D/exec';
+const url = 'https://script.google.com/macros/s/AKfycbw1ntn0dUbpGZlg2bVyRddbihjQ4tK1W51FS95p4KtOXEYufzEMKEk_KgU8SuAQbx-WNg/exec';
 const secret = 'Ajawid_Secret_2026';
 
 const payload = {
