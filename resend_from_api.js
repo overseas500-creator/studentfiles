@@ -13,15 +13,15 @@ const resendTodayNotifications = async () => {
     const response = await axios.get(API_URL);
     const allReports = response.data;
     
-    // Filter reports for 2026-09-02
-    const targetDateStr = '2026-09-02';
+    // Filter reports for 2026-09-03
+    const targetDateStr = '2026-09-03';
     const todayReports = allReports.filter(report => {
       if (!report.created_at) return false;
       return report.created_at.startsWith(targetDateStr);
     });
 
     if (todayReports.length === 0) {
-      console.log("ℹ️ لم يتم العثور على أي تقارير ليوم 2026/9/2.");
+      console.log("ℹ️ لم يتم العثور على أي تقارير ليوم 2026/9/3.");
       process.exit(0);
     }
 
