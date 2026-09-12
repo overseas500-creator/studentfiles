@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const API_URL = 'https://studentfiles.onrender.com/api/reports';
-const WEBHOOK_URL = process.env.GAS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbw1ntn0dUbpGZlg2bVyRddbihjQ4tK1W51FS95p4KtOXEYufzEMKEk_KgU8SuAQbx-WNg/exec";
+const WEBHOOK_URL = process.env.GAS_WEBAPP_URL || "https://script.google.com/macros/s/AKfycbxRgRg3dP4Iyn5OXJZAeQL5CRhvLpzgXd0CqXKwzR0CULERR-B-vc9momu7CH90V-O53g/exec";
 const SECRET = process.env.AJAWID_SECRET || "Ajawid_Secret_2026";
 
 const resendTodayNotifications = async () => {
