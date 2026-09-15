@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Send, CheckSquare, Award } from 'lucide-react';
+import { Send, CheckSquare, Award, FileText, Printer, Search, Filter } from 'lucide-react';
 import axios from 'axios';
 
 const behavioralViolations = [
@@ -47,6 +47,115 @@ const TeacherView = () => {
   const [reportData, setReportData] = useState({
     notes: ''
   });
+  const [activeTab, setActiveTab] = useState<'create' | 'archive'>('create');
+  const [myReports, setMyReports] = useState<any[]>([]);
+  const [archiveFilterGrade, setArchiveFilterGrade] = useState('الكل');
+  const [archiveFilterClass, setArchiveFilterClass] = useState('');
+  const [archiveFilterCategory, setArchiveFilterCategory] = useState('الكل');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const fetchMyReports = async () => {
+    if (!currentTeacher) return;
+    try {
+      const res = await axios.get('/api/reports');
+      const teacherReports = res.data.filter((r: any) => 
+        (r.teacher_id && r.teacher_id === currentTeacher.id) || 
+        r.teacher_name === currentTeacher.name
+      );
+      setMyReports(teacherReports);
+    } catch (err) {
+      console.error('Error fetching reports:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'archive') {
+      fetchMyReports();
+    }
+  }, [activeTab, currentTeacher]);
+
+  const filteredArchive = myReports.filter(r => {
+    const matchesSearch = !searchQuery || (r.student_name && r.student_name.includes(searchQuery));
+    const matchesGrade = archiveFilterGrade === 'الكل' || r.grade === archiveFilterGrade;
+    const matchesClass = !archiveFilterClass || (r.class_name && r.class_name.includes(archiveFilterClass));
+    
+    let matchesCategory = true;
+    if (archiveFilterCategory !== 'الكل') {
+      if (archiveFilterCategory === 'المشكلات السلوكية') {
+        matchesCategory = behavioralViolations.includes(r.violation_type);
+      } else if (archiveFilterCategory === 'المشكلات الدراسية') {
+        matchesCategory = academicViolations.includes(r.violation_type);
+      } else if (archiveFilterCategory === 'الشكر والتقدير') {
+        matchesCategory = r.violation_type === 'شكر وتقدير';
+      } else if (archiveFilterCategory === 'أخرى') {
+        matchesCategory = !behavioralViolations.includes(r.violation_type) && 
+                          !academicViolations.includes(r.violation_type) && 
+                          r.violation_type !== 'شكر وتقدير';
+      }
+    }
+    return matchesSearch && matchesGrade && matchesClass && matchesCategory;
+  });
+
+  const handlePrintArchive = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html dir="rtl">
+          <head>
+            <title>سجل الملاحظات المرسلة</title>
+            <style>
+              @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+              body { font-family: 'Cairo', 'Arial', sans-serif; padding: 40px; color: #333; line-height: 1.6; }
+              .header { text-align: center; margin-bottom: 40px; border-bottom: 3px double #333; padding-bottom: 20px; }
+              h2 { margin: 0; color: #1a365d; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: right; }
+              th { background-color: #f1f5f9; color: #475569; font-weight: 700; }
+              tr:nth-child(even) { background-color: #f8fafc; }
+              @media print {
+                body { padding: 20px; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h2>سجل الملاحظات المرسلة</h2>
+              <p>المعلم: ${currentTeacher.name}</p>
+              <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</p>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 15%">التاريخ</th>
+                  <th style="width: 20%">الطالب</th>
+                  <th style="width: 15%">الصف/الفصل</th>
+                  <th style="width: 25%">التصنيف</th>
+                  <th style="width: 25%">ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${filteredArchive.map(r => `
+                  <tr>
+                    <td>${new Date(r.created_at).toLocaleDateString('ar-SA')}</td>
+                    <td>${r.student_name}</td>
+                    <td>${r.grade} - ${r.class_name}</td>
+                    <td>${r.violation_type}</td>
+                    <td>${r.notes || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <script>
+              window.onload = () => {
+                window.print();
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
 
   useEffect(() => {
     const savedTeacher = localStorage.getItem('teacher');
@@ -147,7 +256,7 @@ const TeacherView = () => {
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', background: 'white', padding: '16px 24px', borderRadius: '16px', boxShadow: 'var(--shadow)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', background: 'white', padding: '16px 24px', borderRadius: '16px', boxShadow: 'var(--shadow)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
                 {currentTeacher.name[0]}
@@ -162,6 +271,40 @@ const TeacherView = () => {
             </button>
           </div>
 
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+            <button 
+              onClick={() => setActiveTab('create')}
+              style={{ 
+                padding: '12px 24px', 
+                borderRadius: '12px', 
+                border: 'none', 
+                background: activeTab === 'create' ? 'var(--primary)' : 'white',
+                color: activeTab === 'create' ? 'white' : 'var(--text-main)',
+                cursor: 'pointer',
+                fontWeight: 600,
+                boxShadow: 'var(--shadow)'
+              }}
+            >
+              إنشاء بلاغ
+            </button>
+            <button 
+              onClick={() => setActiveTab('archive')}
+              style={{ 
+                padding: '12px 24px', 
+                borderRadius: '12px', 
+                border: 'none', 
+                background: activeTab === 'archive' ? 'var(--primary)' : 'white',
+                color: activeTab === 'archive' ? 'white' : 'var(--text-main)',
+                cursor: 'pointer',
+                fontWeight: 600,
+                boxShadow: 'var(--shadow)'
+              }}
+            >
+              سجل الملاحظات المرسلة
+            </button>
+          </div>
+
+          {activeTab === 'create' ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '32px' }}>
             
             {/* Selection Column */}
@@ -383,6 +526,136 @@ const TeacherView = () => {
             </div>
 
           </div>
+          ) : (
+            <div className="glass-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+                  <FileText size={20} color="var(--primary)" />
+                  أرشيف الملاحظات المرسلة
+                </h3>
+                <button
+                  onClick={handlePrintArchive}
+                  className="btn-primary"
+                  style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+                >
+                  <Printer size={16} style={{ marginLeft: '8px' }} />
+                  طباعة السجل
+                </button>
+              </div>
+
+              {/* Filters */}
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
+                <div style={{ position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input
+                    className="input-field"
+                    placeholder="بحث باسم الطالب..."
+                    style={{ paddingRight: '36px', width: '220px', padding: '10px 36px 10px 12px' }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                <select
+                  className="input-field"
+                  style={{ width: '150px', padding: '10px' }}
+                  value={archiveFilterCategory}
+                  onChange={(e) => setArchiveFilterCategory(e.target.value)}
+                >
+                  <option value="الكل">جميع التصنيفات</option>
+                  <option value="المشكلات السلوكية">المشكلات السلوكية</option>
+                  <option value="المشكلات الدراسية">المشكلات الدراسية</option>
+                  <option value="الشكر والتقدير">الشكر والتقدير</option>
+                  <option value="أخرى">أخرى</option>
+                </select>
+
+                <select
+                  className="input-field"
+                  style={{ width: '140px', padding: '10px' }}
+                  value={archiveFilterGrade}
+                  onChange={(e) => { setArchiveFilterGrade(e.target.value); setArchiveFilterClass(''); }}
+                >
+                  <option value="الكل">جميع الصفوف</option>
+                  {[...new Set(myReports.map(r => r.grade?.trim()))].filter(Boolean).sort().map(grade => (
+                    <option key={grade} value={grade}>{grade}</option>
+                  ))}
+                </select>
+
+                <select
+                  className="input-field"
+                  style={{ width: '120px', padding: '10px' }}
+                  value={archiveFilterClass}
+                  onChange={(e) => setArchiveFilterClass(e.target.value)}
+                  disabled={archiveFilterGrade === 'الكل'}
+                >
+                  <option value="">جميع الفصول</option>
+                  {[...new Set(
+                    myReports
+                      .filter(r => r.grade?.trim() === archiveFilterGrade.trim())
+                      .map(r => r.class_name?.trim())
+                  )].filter(Boolean).sort().map(cls => (
+                    <option key={cls} value={cls}>{cls}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Table */}
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)' }}>التاريخ</th>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)' }}>الطالب</th>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)' }}>الصف/الفصل</th>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)' }}>التصنيف</th>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)' }}>الحالة</th>
+                      <th style={{ padding: '16px', color: 'var(--text-muted)' }}>ملاحظات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredArchive.map((report) => (
+                      <tr key={report.id || report._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '16px', fontSize: '0.9rem' }}>{new Date(report.created_at).toLocaleDateString('ar-SA')}</td>
+                        <td style={{ padding: '16px', fontWeight: 600 }}>{report.student_name}</td>
+                        <td style={{ padding: '16px' }}>{report.grade} - {report.class_name}</td>
+                        <td style={{ padding: '16px' }}>
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '20px',
+                            background: 'rgba(37, 99, 235, 0.05)',
+                            color: 'var(--primary)',
+                            fontSize: '0.8rem',
+                            border: '1px solid rgba(37, 99, 235, 0.1)',
+                            fontWeight: 600
+                          }}>
+                            {report.violation_type}
+                          </span>
+                        </td>
+                        <td style={{ padding: '16px' }}>
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '20px',
+                            background: report.status === 'done' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                            color: report.status === 'done' ? 'var(--success)' : '#d97706',
+                            fontSize: '0.8rem',
+                            fontWeight: 600
+                          }}>
+                            {report.status === 'done' ? 'مكتمل' : 'قيد المعالجة'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '16px' }}>{report.notes || '-'}</td>
+                      </tr>
+                    ))}
+                    {filteredArchive.length === 0 && (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>لا توجد بلاغات تطابق البحث</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
