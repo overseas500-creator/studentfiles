@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Send, CheckSquare, Award, FileText, Printer, Search, Filter } from 'lucide-react';
+import { Send, CheckSquare, Award, FileText, Printer, Search } from 'lucide-react';
 import axios from 'axios';
 
 const behavioralViolations = [
