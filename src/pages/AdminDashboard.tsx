@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PlusCircle, Search, Users, Trash2, FileUp } from 'lucide-react';
+import { PlusCircle, Search, Users, Trash2, FileUp, Edit } from 'lucide-react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 
@@ -22,6 +22,7 @@ const AdminDashboard = () => {
     subject: ''
   });
   const [importLoading, setImportLoading] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState<any>(null);
 
   useEffect(() => {
     fetchStudents();
@@ -49,12 +50,31 @@ const AdminDashboard = () => {
   const handleTeacherSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('/api/teachers', teacherFormData);
+      if (editingTeacher) {
+        await axios.put(`/api/teachers/${editingTeacher.id}`, teacherFormData);
+        setEditingTeacher(null);
+      } else {
+        await axios.post('/api/teachers', teacherFormData);
+      }
       setTeacherFormData({ name: '', national_id: '', subject: '' });
       fetchTeachers();
     } catch (err) {
-      alert('Error adding teacher');
+      alert('Error saving teacher');
     }
+  };
+
+  const handleEditTeacher = (teacher: any) => {
+    setEditingTeacher(teacher);
+    setTeacherFormData({
+      name: teacher.name,
+      national_id: teacher.national_id,
+      subject: teacher.subject
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTeacher(null);
+    setTeacherFormData({ name: '', national_id: '', subject: '' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -233,7 +253,7 @@ const AdminDashboard = () => {
         <div className="glass-card">
           <h3 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <PlusCircle size={20} color="var(--primary)" />
-            {activeTab === 'students' ? 'إضافة طالب جديد' : 'إضافة معلم جديد'}
+            {activeTab === 'students' ? 'إضافة طالب جديد' : (editingTeacher ? 'تعديل بيانات المعلم' : 'إضافة معلم جديد')}
           </h3>
           {activeTab === 'students' ? (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -313,9 +333,20 @@ const AdminDashboard = () => {
                   placeholder="اختياري: المادة"
                 />
               </div>
-              <button className="btn-primary" type="submit" style={{ marginTop: '10px', justifyContent: 'center' }}>
-                حفظ بيانات المعلم
-              </button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button className="btn-primary" type="submit" style={{ flex: 1, justifyContent: 'center' }}>
+                  {editingTeacher ? 'تحديث البيانات' : 'حفظ بيانات المعلم'}
+                </button>
+                {editingTeacher && (
+                  <button 
+                    type="button" 
+                    onClick={handleCancelEdit} 
+                    style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid var(--border)', background: 'white', color: 'var(--text-main)', cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    إلغاء
+                  </button>
+                )}
+              </div>
             </form>
           )}
         </div>
@@ -468,9 +499,14 @@ const AdminDashboard = () => {
                     <td style={{ padding: '12px', fontWeight: 600 }}>{teacher.name}</td>
                     <td style={{ padding: '12px' }}>{teacher.national_id}</td>
                     <td style={{ padding: '12px' }}>{teacher.subject}</td>
-                    <td style={{ padding: '12px' }}>
-                      <button onClick={() => handleDeleteTeacher(teacher.id || teacher._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>
+                    <td style={{ padding: '12px', display: 'flex', gap: '12px' }}>
+                      <button onClick={() => handleEditTeacher(teacher)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                        <Edit size={18} />
+                        تعديل
+                      </button>
+                      <button onClick={() => handleDeleteTeacher(teacher.id || teacher._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
                         <Trash2 size={18} />
+                        حذف
                       </button>
                     </td>
                   </tr>

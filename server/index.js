@@ -213,6 +213,22 @@ app.delete('/api/teachers/:id', async (req, res) => {
   }
 });
 
+app.put('/api/teachers/:id', async (req, res) => {
+  try {
+    const updatedTeacher = await Teacher.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!updatedTeacher) {
+      return res.status(404).json({ error: 'المعلم غير موجود' });
+    }
+    res.json({ ...updatedTeacher._doc, id: updatedTeacher._id });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.post('/api/teachers/login', async (req, res) => {
   try {
     const { national_id } = req.body;
