@@ -53,7 +53,8 @@ const studentSchema = new mongoose.Schema({
   grade: { type: String, required: true },
   class_name: { type: String, required: true },
   phone: String,
-  student_number: { type: String, unique: true, required: true }
+  student_number: { type: String, unique: true, required: true },
+  is_active: { type: Boolean, default: true }
 });
 
 const teacherSchema = new mongoose.Schema({
@@ -86,7 +87,7 @@ app.use((req, res, next) => {
 // Students API
 app.get('/api/students', async (req, res) => {
   try {
-    const students = await Student.find();
+    const students = await Student.find({ is_active: { $ne: false } });
     console.log(`[Database] Found ${students.length} students in collection.`);
     res.json(students.map(s => {
       const obj = s.toObject();
@@ -112,16 +113,33 @@ app.post('/api/students/bulk', async (req, res) => {
   try {
     const students = req.body;
     const incomingNumbers = students.map(s => s.student_number);
-    const existingStudents = await Student.find({ student_number: { $in: incomingNumbers } }, 'student_number');
-    const existingNumbers = new Set(existingStudents.map(s => s.student_number));
     
-    const newStudents = students.filter(s => !existingNumbers.has(s.student_number));
+    const bulkOps = students.map(s => ({
+      updateOne: {
+        filter: { student_number: s.student_number },
+        update: { 
+          $set: { 
+            name: s.name,
+            grade: s.grade,
+            class_name: s.class_name,
+            phone: s.phone,
+            is_active: true
+          } 
+        },
+        upsert: true
+      }
+    }));
     
-    if (newStudents.length > 0) {
-      await Student.insertMany(newStudents);
+    if (bulkOps.length > 0) {
+      await Student.bulkWrite(bulkOps);
     }
     
-    res.json({ success: true, count: newStudents.length, ignored: students.length - newStudents.length });
+    await Student.updateMany(
+      { student_number: { $nin: incomingNumbers } },
+      { $set: { is_active: false } }
+    );
+    
+    res.json({ success: true, count: students.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

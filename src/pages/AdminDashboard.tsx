@@ -51,7 +51,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     try {
       if (editingTeacher) {
-        await axios.put(`/api/teachers/${editingTeacher.id}`, teacherFormData);
+        await axios.put(`/api/teachers/${editingTeacher.id || editingTeacher._id}`, teacherFormData);
         setEditingTeacher(null);
       } else {
         await axios.post('/api/teachers', teacherFormData);
@@ -70,6 +70,7 @@ const AdminDashboard = () => {
       national_id: teacher.national_id,
       subject: teacher.subject
     });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCancelEdit = () => {
@@ -165,8 +166,7 @@ const AdminDashboard = () => {
           }
 
           const res = await axios.post('/api/students/bulk', formattedStudents);
-          const { count, ignored } = res.data;
-          alert(`تم استيراد ${count} طالب جديد بنجاح. ${ignored ? `وتم تجاهل ${ignored} طالب موجود مسبقاً.` : ''}`);
+          alert('تم مزامنة بيانات الطلاب بنجاح بحسب الملف المرفق.');
           fetchStudents();
         } else {
           const formattedTeachers = data.map((row: any) => ({
