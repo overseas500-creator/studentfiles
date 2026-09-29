@@ -165,7 +165,7 @@ const AdminDashboard = () => {
             return;
           }
 
-          const res = await axios.post('/api/students/bulk', formattedStudents);
+          await axios.post('/api/students/bulk', formattedStudents);
           alert('تم مزامنة بيانات الطلاب بنجاح بحسب الملف المرفق.');
           fetchStudents();
         } else {
